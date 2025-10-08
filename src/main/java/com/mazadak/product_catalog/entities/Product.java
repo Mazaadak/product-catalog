@@ -22,7 +22,9 @@ public class Product extends BaseEntity {
     @Column(length = 100, nullable = false)
     private String title;
 
-    private Long categoryId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
     @Lob
     private String description;

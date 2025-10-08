@@ -1,11 +1,15 @@
 package com.mazadak.product_catalog.entities;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "categories")
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Category extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,6 +20,7 @@ public class Category extends BaseEntity{
 
     // FIELD TO ADD: References the ID of the parent category.
     // If null, this is a top-level (root) category.
-    @Column(name = "parent_id")
-    private Long parentId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Category parentCategory;
 }

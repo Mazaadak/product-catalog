@@ -2,6 +2,7 @@ package com.mazadak.product_catalog.service;
 
 import com.mazadak.product_catalog.dto.ProductDTO;
 import com.mazadak.product_catalog.entities.Product;
+import com.mazadak.product_catalog.entities.ProductStatus;
 import com.mazadak.product_catalog.mapper.ProductMapper;
 import com.mazadak.product_catalog.repositories.ProductRepository;
 import lombok.AllArgsConstructor;
@@ -52,8 +53,12 @@ public class ProductService {
     }
 
     public void deleteProduct(Long productId) {
-        productRepository.deleteById(productId);
+        productRepository.findById(productId).ifPresent(product -> {
+            product.setStatus(ProductStatus.DELETED);
+            productRepository.save(product);
+        });
     }
+
 
     public ProductDTO getProductBySellerIdAndProductId(Long sellerId, Long productId) {
         return productMapper.ToDTO(productRepository.findProductBySellerIdAndProductId(sellerId, productId));

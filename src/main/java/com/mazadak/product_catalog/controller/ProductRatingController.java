@@ -47,4 +47,25 @@ public class ProductRatingController {
         Page<ProductRatingDTO> ratings = productRatingService.getRatingsByProductId(productId, pageable);
         return ResponseEntity.ok(ratings);
     }
+
+    @GetMapping("/ratings/{ratingId}")
+    public ResponseEntity<ProductRatingDTO> getRatingById(@PathVariable Long ratingId) {
+        ProductRatingDTO rating = productRatingService.getProductRatingById(ratingId);
+        return ResponseEntity.ok(rating);
+    }
+
+    @GetMapping("/ratings/user/{userId}")
+    public ResponseEntity<Page<ProductRatingDTO>> getRatingsByUserId(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "ratingId") String sortField,
+            @RequestParam(defaultValue = "desc") String direction) {
+
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by(Sort.Direction.fromString(direction), sortField));
+
+        Page<ProductRatingDTO> ratings = productRatingService.getRatingsByUserId(userId, pageable);
+        return ResponseEntity.ok(ratings);
+    }
 }

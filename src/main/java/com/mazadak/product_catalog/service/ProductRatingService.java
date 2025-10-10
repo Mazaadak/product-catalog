@@ -48,4 +48,9 @@ public class ProductRatingService {
         return productRatingRepository.findByProduct_ProductId(productId, pageable)
                 .map(productRatingMapper::ToDTO);
     }
+
+    public Page<ProductRatingDTO> getRatingsByUserId(Long userId, Pageable pageable) {
+        return productRatingRepository.findByUser_UserId(userId, pageable)
+                .map(productRatingMapper::ToDTO);
+    }
 }

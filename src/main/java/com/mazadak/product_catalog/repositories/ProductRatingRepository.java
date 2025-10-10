@@ -10,4 +10,6 @@ import org.springframework.stereotype.Repository;
 public interface ProductRatingRepository extends JpaRepository<ProductRating, Long> {
 
     Page<ProductRating> findByProduct_ProductId(Long productId, Pageable pageable);
+
+    Page<ProductRating> findByUserId(Long userId, Pageable pageable);
 }

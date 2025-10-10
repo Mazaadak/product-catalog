@@ -11,33 +11,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/products")
 @AllArgsConstructor
 public class ProductController {
     private final ProductService productService;
 
-    @GetMapping("/products/{productId}")
+    @GetMapping("/{productId}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long productId) {
         return ResponseEntity.ok(productService.getProductById(productId));
     }
 
-
-    @GetMapping("/seller/{sellerId}/products/{productId}")
-    public ResponseEntity<ProductDTO> getProductBySellerIdAndProductId(
-            @PathVariable Long sellerId,
-            @PathVariable Long productId) {
-        return ResponseEntity.ok(productService.getProductBySellerIdAndProductId(sellerId, productId));
-    }
-
-    @DeleteMapping("/{productId}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long productId) {
-        productService.deleteProduct(productId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/products")
+    @GetMapping
     public ResponseEntity<Page<ProductDTO>> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -51,7 +36,7 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    @GetMapping("/seller/{seller_id}/products")
+    @GetMapping("/seller/{sellerId}")
     public ResponseEntity<Page<ProductDTO>> getProductsBySellerId(
             @PathVariable Long sellerId,
             @RequestParam(defaultValue = "0") int page,
@@ -66,13 +51,26 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    @PutMapping("/products")
+    @GetMapping("/seller/{sellerId}/{productId}")
+    public ResponseEntity<ProductDTO> getProductBySellerIdAndProductId(
+            @PathVariable Long sellerId,
+            @PathVariable Long productId) {
+        return ResponseEntity.ok(productService.getProductBySellerIdAndProductId(sellerId, productId));
+    }
+
+    @PostMapping
+    public ResponseEntity<ProductDTO> createProduct(@RequestBody Product product) {
+        return ResponseEntity.ok(productService.createProduct(product));
+    }
+
+    @PutMapping("/{productId}")
     public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long productId, @RequestBody Product product) {
         return ResponseEntity.ok(productService.updateProduct(productId, product));
     }
 
-    @PostMapping("/products")
-    public ResponseEntity<ProductDTO> createProduct(@RequestBody Product product) {
-        return ResponseEntity.ok(productService.createProduct(product));
+    @DeleteMapping("/{productId}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long productId) {
+        productService.deleteProduct(productId);
+        return ResponseEntity.noContent().build();
     }
 }

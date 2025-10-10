@@ -19,6 +19,6 @@ public class ProductDTO {
     private String type;
     private String status;
     private List<ProductImage> productImages;
-    private List<ProductRating> productRatings;
+    private List<ProductRatingDTO> productRatings;
 
 }

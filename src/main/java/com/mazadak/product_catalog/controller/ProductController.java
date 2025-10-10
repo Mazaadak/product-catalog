@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
+@RequestMapping("/api")
 @AllArgsConstructor
 public class ProductController {
     private final ProductService productService;

@@ -53,10 +53,7 @@ public class ProductService {
     }
 
     public void deleteProduct(Long productId) {
-        productRepository.findById(productId).ifPresent(product -> {
-            product.setStatus(ProductStatus.DELETED);
-            productRepository.save(product);
-        });
+
     }
 
 

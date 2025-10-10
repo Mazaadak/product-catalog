@@ -32,11 +32,13 @@ public class Product extends BaseEntity {
 
     private BigDecimal price;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private String type;
+    private ProductType type;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private String status = "active";
+    private ProductStatus status = ProductStatus.ACTIVE;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images;

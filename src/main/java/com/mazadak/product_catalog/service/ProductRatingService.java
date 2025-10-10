@@ -50,7 +50,7 @@ public class ProductRatingService {
     }
 
     public Page<ProductRatingDTO> getRatingsByUserId(Long userId, Pageable pageable) {
-        return productRatingRepository.findByUser_UserId(userId, pageable)
+        return productRatingRepository.findByUserId(userId, pageable)
                 .map(productRatingMapper::ToDTO);
     }
 }

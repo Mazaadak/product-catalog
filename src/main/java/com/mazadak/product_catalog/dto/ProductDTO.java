@@ -1,8 +1,6 @@
 package com.mazadak.product_catalog.dto;
 
-import com.mazadak.product_catalog.entities.Category;
-import com.mazadak.product_catalog.entities.ProductImage;
-import com.mazadak.product_catalog.entities.ProductRating;
+import com.mazadak.product_catalog.entities.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -16,9 +14,9 @@ public class ProductDTO {
     private Category category;
     private String description;
     private BigDecimal price;
-    private String type;
-    private String status;
-    private List<ProductImage> productImages;
-    private List<ProductRatingDTO> productRatings;
+    private ProductType type;
+    private ProductStatus status;
+    private List<ProductImage> images;
+    private List<ProductRatingDTO> ratings;
 
 }

@@ -45,3 +45,14 @@ CREATE TABLE product_ratings (
                                  FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
                                  INDEX idx_product_id (product_id)
 ) ENGINE=InnoDB;
+
+CREATE TABLE idempotency_records (
+                                 idempotency_key VARCHAR(255) PRIMARY KEY,
+                                 product_id BIGINT NULL,
+                                 request_hash VARCHAR(64) NOT NULL,
+                                 status ENUM('IN_PROGRESS', 'COMPLETED', 'FAILED') NOT NULL DEFAULT 'IN_PROGRESS',
+                                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                 FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE SET NULL,
+                                 INDEX idx_product_id (product_id)
+) ENGINE=InnoDB;

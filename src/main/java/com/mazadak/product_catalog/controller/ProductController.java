@@ -2,7 +2,7 @@ package com.mazadak.product_catalog.controller;
 
 import com.mazadak.product_catalog.dto.ProductDTO;
 import com.mazadak.product_catalog.entities.Product;
-import com.mazadak.product_catalog.mapper.ProductMapper;
+import com.mazadak.product_catalog.util.IdempotencyUtil;
 import com.mazadak.product_catalog.service.ProductService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -62,6 +62,8 @@ public class ProductController {
     public ResponseEntity<ProductDTO> createProduct(
             @RequestHeader("X-Idempotency-Key") String idempotencyKey,
             @RequestBody Product product) {
+        String requestHash = IdempotencyUtil.calculateHash(product);
+        ProductDTO productDTO = productService.createProduct(idempotencyKey, requestHash, product);
         return ResponseEntity.ok(productService.createProduct(product));
     }
 

@@ -49,4 +49,7 @@ public class Product extends BaseEntity {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductRating> ratings;
+
+    @OneToOne(mappedBy = "product", fetch = FetchType.LAZY)
+    private IdempotencyRecord idempotencyRecord;
 }

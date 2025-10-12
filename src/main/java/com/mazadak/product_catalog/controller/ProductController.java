@@ -59,7 +59,9 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductDTO> createProduct(@RequestBody Product product) {
+    public ResponseEntity<ProductDTO> createProduct(
+            @RequestHeader("X-Idempotency-Key") String idempotencyKey,
+            @RequestBody Product product) {
         return ResponseEntity.ok(productService.createProduct(product));
     }
 

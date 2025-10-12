@@ -2,6 +2,8 @@ package com.mazadak.product_catalog.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.mazadak.product_catalog.entities.enums.ProductStatus;
+import com.mazadak.product_catalog.entities.enums.ProductType;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;

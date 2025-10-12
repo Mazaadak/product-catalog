@@ -1,5 +1,6 @@
 package com.mazadak.product_catalog.entities;
 
+import com.mazadak.product_catalog.entities.enums.IdempotencyStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

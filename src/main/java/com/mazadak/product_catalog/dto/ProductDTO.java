@@ -1,6 +1,8 @@
 package com.mazadak.product_catalog.dto;
 
 import com.mazadak.product_catalog.entities.*;
+import com.mazadak.product_catalog.entities.enums.ProductStatus;
+import com.mazadak.product_catalog.entities.enums.ProductType;
 import lombok.Data;
 
 import java.math.BigDecimal;

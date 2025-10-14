@@ -2,6 +2,7 @@ package com.mazadak.product_catalog.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mazadak.product_catalog.dto.event.ProductCreatedEvent;
 import com.mazadak.product_catalog.dto.event.ProductDeletedEvent;
 import com.mazadak.product_catalog.dto.event.ProductUpdatedEvent;
 import com.mazadak.product_catalog.dto.request.CreateProductRequestDTO;
@@ -51,26 +52,18 @@ public class ProductService {
 
     @Transactional
     public ProductResponseDTO createProduct(String idempotencyKey, String requestHash, CreateProductRequestDTO createRequest, Long currentUserId) {
-        Optional<IdempotencyRecord> existingRecordOpt = idempotencyRecordRepository.findByIdempotencyKey(idempotencyKey);
-        if (existingRecordOpt.isPresent()) {
-            IdempotencyRecord existing = existingRecordOpt.get();
-            if (existing.getStatus() == IdempotencyStatus.COMPLETED) {
-                if (!existing.getRequestHash().equals(requestHash)) {
-                    throw new RuntimeException("Idempotency key reused with a different request payload.");
-                }
-                return productMapper.toDTO(existing.getProduct());
-            }
-            if (existing.getStatus() == IdempotencyStatus.IN_PROGRESS) {
-                throw new RuntimeException("Request with this key is currently in progress. Please retry later.");
-            }
+        Optional<ProductResponseDTO> existingResponse = handleIdempotencyCheck(idempotencyKey, requestHash);
+        if (existingResponse.isPresent()) {
+            return existingResponse.get();
         }
 
-        IdempotencyRecord newRecord = IdempotencyRecord.builder()
-                .idempotencyKey(idempotencyKey)
-                .requestHash(requestHash)
-                .status(IdempotencyStatus.IN_PROGRESS)
-                .build();
-        idempotencyRecordRepository.save(newRecord);
+        IdempotencyRecord newRecord = idempotencyRecordRepository.save(
+                IdempotencyRecord.builder()
+                        .idempotencyKey(idempotencyKey)
+                        .requestHash(requestHash)
+                        .status(IdempotencyStatus.IN_PROGRESS)
+                        .build()
+        );
 
         try {
             Product productEntity = productMapper.toEntity(createRequest);
@@ -81,16 +74,64 @@ public class ProductService {
             productEntity.setCategory(category);
 
             Product savedProduct = productRepository.save(productEntity);
+            createProductOutboxEvent(savedProduct);
+
             newRecord.setProduct(savedProduct);
             newRecord.setStatus(IdempotencyStatus.COMPLETED);
             idempotencyRecordRepository.save(newRecord);
+
             return productMapper.toDTO(savedProduct);
+
         } catch (Exception e) {
             newRecord.setStatus(IdempotencyStatus.FAILED);
             idempotencyRecordRepository.save(newRecord);
             throw e;
         }
     }
+
+    private Optional<ProductResponseDTO> handleIdempotencyCheck(String idempotencyKey, String requestHash) {
+        Optional<IdempotencyRecord> existingRecordOpt = idempotencyRecordRepository.findByIdempotencyKey(idempotencyKey);
+        if (existingRecordOpt.isPresent()) {
+            IdempotencyRecord existing = existingRecordOpt.get();
+            if (existing.getStatus() == IdempotencyStatus.COMPLETED) {
+                if (!existing.getRequestHash().equals(requestHash)) {
+                    throw new RuntimeException("Idempotency key reused with a different request payload.");
+                }
+                return Optional.of(productMapper.toDTO(existing.getProduct()));
+            }
+            if (existing.getStatus() == IdempotencyStatus.IN_PROGRESS) {
+                throw new RuntimeException("Request with this key is currently in progress. Please retry later.");
+            }
+        }
+        return Optional.empty();
+    }
+
+    private void createProductOutboxEvent(Product product) {
+        try {
+            ProductCreatedEvent eventPayload = new ProductCreatedEvent(
+                    product.getProductId(),
+                    product.getSellerId(),
+                    product.getTitle(),
+                    product.getDescription(),
+                    product.getPrice(),
+                    product.getType(),
+                    product.getCategory().getCategoryId()
+            );
+            String payload = objectMapper.writeValueAsString(eventPayload);
+
+            OutboxEvent outboxEvent = new OutboxEvent();
+            outboxEvent.setAggregateType("Product");
+            outboxEvent.setAggregateId(product.getProductId().toString());
+            outboxEvent.setEventType("ProductCreated");
+            outboxEvent.setPayload(payload);
+
+            outboxRepository.save(outboxEvent);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error creating outbox event for product creation", e);
+        }
+    }
+
 
     @Transactional
     public ProductResponseDTO updateProduct(Long productId, UpdateProductRequestDTO updateRequest, Long currentUserId) {
@@ -106,32 +147,35 @@ public class ProductService {
         }
 
         productMapper.updateEntityFromDto(updateRequest, existingProduct);
-
         Product savedProduct = productRepository.save(existingProduct);
+        updateProductOutboxEvent(savedProduct);
+
+        return productMapper.toDTO(savedProduct);
+    }
+
+    private void updateProductOutboxEvent(Product product) {
         try {
             ProductUpdatedEvent eventPayload = new ProductUpdatedEvent(
-                    savedProduct.getProductId(),
-                    savedProduct.getSellerId(),
-                    savedProduct.getTitle(),
-                    savedProduct.getDescription(),
-                    savedProduct.getPrice(),
-                    savedProduct.getType(),
-                    savedProduct.getCategory().getCategoryId()
+                    product.getProductId(),
+                    product.getSellerId(),
+                    product.getTitle(),
+                    product.getDescription(),
+                    product.getPrice(),
+                    product.getType(),
+                    product.getCategory().getCategoryId()
             );
             String payload = objectMapper.writeValueAsString(eventPayload);
 
             OutboxEvent outboxEvent = new OutboxEvent();
             outboxEvent.setAggregateType("Product");
-            outboxEvent.setAggregateId(savedProduct.getProductId().toString());
+            outboxEvent.setAggregateId(product.getProductId().toString());
             outboxEvent.setEventType("ProductUpdated");
             outboxEvent.setPayload(payload);
 
             outboxRepository.save(outboxEvent);
-
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error creating outbox event for product update", e);
         }
-        return productMapper.toDTO(savedProduct);
     }
 
     @Transactional
@@ -148,19 +192,21 @@ public class ProductService {
 
         productToDelete.setStatus(ProductStatus.DELETED);
         productRepository.save(productToDelete);
+        deleteProductOutboxEvent(productToDelete);
+    }
 
+    private void deleteProductOutboxEvent(Product product) {
         try {
-            ProductDeletedEvent eventPayload = new ProductDeletedEvent(productToDelete.getProductId());
+            ProductDeletedEvent eventPayload = new ProductDeletedEvent(product.getProductId());
             String payload = objectMapper.writeValueAsString(eventPayload);
 
             OutboxEvent outboxEvent = new OutboxEvent();
             outboxEvent.setAggregateType("Product");
-            outboxEvent.setAggregateId(productToDelete.getProductId().toString());
+            outboxEvent.setAggregateId(product.getProductId().toString());
             outboxEvent.setEventType("ProductDeleted");
             outboxEvent.setPayload(payload);
 
             outboxRepository.save(outboxEvent);
-
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error creating outbox event for product deletion", e);
         }

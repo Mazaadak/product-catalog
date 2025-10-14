@@ -8,8 +8,8 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface ProductRatingMapper {
-    ProductRatingDTO ToDTO(ProductRating productRating);
-    ProductRating ToEntity(ProductRatingDTO productRatingDTO);
-    List<ProductRatingDTO> ToDTOList(List<ProductRating> productRatings);
-    List<ProductRating> ToEntityList(List<ProductRatingDTO> productRatingDTOs);
+    ProductRatingDTO toDTO(ProductRating productRating);
+    ProductRating toEntity(ProductRatingDTO productRatingDTO);
+    List<ProductRatingDTO> toDTOList(List<ProductRating> productRatings);
+    List<ProductRating> toEntityList(List<ProductRatingDTO> productRatingDTOs);
 }

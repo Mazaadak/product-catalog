@@ -2,6 +2,7 @@ package com.mazadak.product_catalog.controller;
 
 import com.mazadak.product_catalog.dto.ProductDTO;
 import com.mazadak.product_catalog.entities.Product;
+import com.mazadak.product_catalog.mapper.ProductMapper;
 import com.mazadak.product_catalog.util.IdempotencyUtil;
 import com.mazadak.product_catalog.service.ProductService;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class ProductController {
     private final ProductService productService;
+    private final  ProductMapper productMapper;
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long productId) {
         return ResponseEntity.ok(productService.getProductById(productId));
@@ -61,15 +63,15 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(
             @RequestHeader("X-Idempotency-Key") String idempotencyKey,
-            @RequestBody Product product) {
+            @RequestBody ProductDTO product) {
         String requestHash = IdempotencyUtil.calculateHash(product);
         ProductDTO productDTO = productService.createProduct(idempotencyKey, requestHash, product);
-        return ResponseEntity.ok(productService.createProduct(product));
+        return ResponseEntity.ok(productDTO);
     }
 
     @PutMapping("/{productId}")
-    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long productId, @RequestBody Product product) {
-        return ResponseEntity.ok(productService.updateProduct(productId, product));
+    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long productId, @RequestBody ProductDTO productDTO) {
+        return ResponseEntity.ok(productService.updateProduct(productId, productMapper.ToEntity(productDTO)));
     }
 
     @DeleteMapping("/{productId}")

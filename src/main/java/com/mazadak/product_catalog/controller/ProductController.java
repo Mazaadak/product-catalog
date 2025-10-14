@@ -1,7 +1,6 @@
 package com.mazadak.product_catalog.controller;
 
 import com.mazadak.product_catalog.dto.ProductDTO;
-import com.mazadak.product_catalog.entities.Product;
 import com.mazadak.product_catalog.mapper.ProductMapper;
 import com.mazadak.product_catalog.util.IdempotencyUtil;
 import com.mazadak.product_catalog.service.ProductService;

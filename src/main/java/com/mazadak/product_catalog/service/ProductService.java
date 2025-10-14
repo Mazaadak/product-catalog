@@ -1,16 +1,22 @@
 package com.mazadak.product_catalog.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mazadak.product_catalog.dto.event.ProductDeletedEvent;
+import com.mazadak.product_catalog.dto.event.ProductUpdatedEvent;
 import com.mazadak.product_catalog.dto.request.CreateProductRequestDTO;
 import com.mazadak.product_catalog.dto.request.UpdateProductRequestDTO;
 import com.mazadak.product_catalog.dto.response.ProductResponseDTO;
 import com.mazadak.product_catalog.entities.Category;
 import com.mazadak.product_catalog.entities.IdempotencyRecord;
+import com.mazadak.product_catalog.entities.OutboxEvent;
 import com.mazadak.product_catalog.entities.Product;
 import com.mazadak.product_catalog.entities.enums.IdempotencyStatus;
 import com.mazadak.product_catalog.entities.enums.ProductStatus;
 import com.mazadak.product_catalog.mapper.ProductMapper;
 import com.mazadak.product_catalog.repositories.CategoryRepository;
 import com.mazadak.product_catalog.repositories.IdempotencyRecordRepository;
+import com.mazadak.product_catalog.repositories.OutboxEventRepository;
 import com.mazadak.product_catalog.repositories.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
@@ -29,6 +35,8 @@ public class ProductService {
     private final ProductMapper productMapper;
     private final IdempotencyRecordRepository idempotencyRecordRepository;
     private final ProductAuctionService productAuctionService;
+    private final OutboxEventRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
     public Page<ProductResponseDTO> getAllProducts(Pageable pageable) {
         Page<Product> products = productRepository.findAll(pageable);
@@ -100,6 +108,29 @@ public class ProductService {
         productMapper.updateEntityFromDto(updateRequest, existingProduct);
 
         Product savedProduct = productRepository.save(existingProduct);
+        try {
+            ProductUpdatedEvent eventPayload = new ProductUpdatedEvent(
+                    savedProduct.getProductId(),
+                    savedProduct.getSellerId(),
+                    savedProduct.getTitle(),
+                    savedProduct.getDescription(),
+                    savedProduct.getPrice(),
+                    savedProduct.getType(),
+                    savedProduct.getCategory().getCategoryId()
+            );
+            String payload = objectMapper.writeValueAsString(eventPayload);
+
+            OutboxEvent outboxEvent = new OutboxEvent();
+            outboxEvent.setAggregateType("Product");
+            outboxEvent.setAggregateId(savedProduct.getProductId().toString());
+            outboxEvent.setEventType("ProductUpdated");
+            outboxEvent.setPayload(payload);
+
+            outboxRepository.save(outboxEvent);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error creating outbox event for product update", e);
+        }
         return productMapper.toDTO(savedProduct);
     }
 
@@ -117,6 +148,22 @@ public class ProductService {
 
         productToDelete.setStatus(ProductStatus.DELETED);
         productRepository.save(productToDelete);
+
+        try {
+            ProductDeletedEvent eventPayload = new ProductDeletedEvent(productToDelete.getProductId());
+            String payload = objectMapper.writeValueAsString(eventPayload);
+
+            OutboxEvent outboxEvent = new OutboxEvent();
+            outboxEvent.setAggregateType("Product");
+            outboxEvent.setAggregateId(productToDelete.getProductId().toString());
+            outboxEvent.setEventType("ProductDeleted");
+            outboxEvent.setPayload(payload);
+
+            outboxRepository.save(outboxEvent);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error creating outbox event for product deletion", e);
+        }
     }
 
     public ProductResponseDTO getProductBySellerIdAndProductId(Long sellerId, Long productId) {

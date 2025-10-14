@@ -10,9 +10,11 @@ import com.mazadak.product_catalog.repositories.CategoryRepository;
 import com.mazadak.product_catalog.repositories.IdempotencyRecordRepository;
 import com.mazadak.product_catalog.repositories.ProductRepository;
 import lombok.AllArgsConstructor;
+import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -41,38 +43,57 @@ public class ProductService {
         return productMapper.ToDTO(productRepository.findById(productId).orElse(null));
     }
 
-    public ProductDTO createProduct(String idempotencyKey, String requestHash, Product product) {
-        Optional<IdempotencyRecord> existingRecord = idempotencyRecordRepository.findByIdempotencyKey(idempotencyKey);
+    @Transactional
+    public ProductDTO createProduct(String idempotencyKey, String requestHash, ProductDTO productDTO) {
 
-        if (existingRecord.isPresent()) {
-            IdempotencyRecord existing = existingRecord.get();
-            if (!existing.getRequestHash().equals(requestHash)) {
-                throw new RuntimeException("Idempotency key reused with different request body");
+        Optional<IdempotencyRecord> existingRecordOpt = idempotencyRecordRepository.findByIdempotencyKey(idempotencyKey);
+
+        if (existingRecordOpt.isPresent()) {
+            IdempotencyRecord existing = existingRecordOpt.get();
+
+            if (existing.getStatus() == IdempotencyStatus.COMPLETED) {
+                if (!existing.getRequestHash().equals(requestHash)) {
+                    throw new RuntimeException("Idempotency key reused with a different request payload.");
+                }
+
+                Product existingProduct = existing.getProduct();
+                if (existingProduct == null) {
+                    throw new ResourceNotFoundException("Completed idempotent product not found.");
+                }
+                return productMapper.ToDTO(existingProduct);
             }
 
-            Product existingProduct = existing.getProduct();
-            if (existingProduct == null) throw new RuntimeException("Product not found for existing idempotency key");
-            return productMapper.ToDTO(existingProduct);
+            if (existing.getStatus() == IdempotencyStatus.IN_PROGRESS) {
+                throw new RuntimeException("Request with this key is currently in progress. Please retry later.");
+            }
         }
 
-        if (product.getCategory() != null && product.getCategory().getCategoryId() != null) {
-            Category category = categoryRepository.findById(product.getCategory().getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("Category not found"));
-            product.setCategory(category);
+        IdempotencyRecord newRecord = IdempotencyRecord.builder()
+                .idempotencyKey(idempotencyKey)
+                .requestHash(requestHash)
+                .status(IdempotencyStatus.IN_PROGRESS)
+                .build();
+        idempotencyRecordRepository.save(newRecord);
+
+        try {
+            Product productEntity = productMapper.ToEntity(productDTO);
+
+            Category category = categoryRepository.findById(productDTO.getCategory().getCategoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + productDTO.getCategory().getCategoryId()));
+            productEntity.setCategory(category);
+
+            Product savedProduct = productRepository.save(productEntity);
+            newRecord.setProduct(savedProduct);
+            newRecord.setStatus(IdempotencyStatus.COMPLETED);
+            idempotencyRecordRepository.save(newRecord);
+
+            return productMapper.ToDTO(savedProduct);
+
+        } catch (Exception e) {
+            throw e;
         }
-
-        Product saved = productRepository.save(product);
-
-        IdempotencyRecord record = new IdempotencyRecord();
-        record.setIdempotencyKey(idempotencyKey);
-        record.setRequestHash(requestHash);
-        record.setProduct(saved);
-        record.setStatus(IdempotencyStatus.COMPLETED);
-
-        idempotencyRecordRepository.save(record);
-
-        return productMapper.ToDTO(saved);
     }
+
 
 
     public ProductDTO updateProduct(Long productId, Product product) {

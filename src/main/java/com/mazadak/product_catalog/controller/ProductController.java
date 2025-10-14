@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class ProductController {
     private final ProductService productService;
-    private final  ProductMapper productMapper;
+    private final ProductMapper productMapper;
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long productId) {
         return ResponseEntity.ok(productService.getProductById(productId));

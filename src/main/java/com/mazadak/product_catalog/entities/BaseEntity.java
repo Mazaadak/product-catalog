@@ -18,19 +18,11 @@ import java.time.LocalDateTime;
 public class BaseEntity {
     @JsonIgnore
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 
     @JsonIgnore
-    @Column(name = "created_by")
-    private String createdBy;
-
-    @JsonIgnore
     @UpdateTimestamp
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @JsonIgnore
-    @Column(name = "updated_by")
-    private String updatedBy;
 }

@@ -1,6 +1,6 @@
 package com.mazadak.product_catalog.mapper;
 
-import com.mazadak.product_catalog.dto.ProductDTO;
+import com.mazadak.product_catalog.dto.entity.ProductDTO;
 import com.mazadak.product_catalog.entities.Product;
 import org.mapstruct.Mapper;
 

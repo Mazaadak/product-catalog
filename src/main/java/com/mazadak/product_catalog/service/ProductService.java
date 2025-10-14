@@ -1,6 +1,6 @@
 package com.mazadak.product_catalog.service;
 
-import com.mazadak.product_catalog.dto.ProductDTO;
+import com.mazadak.product_catalog.dto.entity.ProductDTO;
 import com.mazadak.product_catalog.entities.Category;
 import com.mazadak.product_catalog.entities.IdempotencyRecord;
 import com.mazadak.product_catalog.entities.Product;

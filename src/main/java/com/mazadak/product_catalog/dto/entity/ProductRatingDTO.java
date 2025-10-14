@@ -1,8 +1,6 @@
-package com.mazadak.product_catalog.dto;
+package com.mazadak.product_catalog.dto.entity;
 
 import lombok.Data;
-
-import java.math.BigDecimal;
 
 @Data
 public class ProductRatingDTO {

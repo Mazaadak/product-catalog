@@ -1,6 +1,6 @@
 package com.mazadak.product_catalog.service;
 
-import com.mazadak.product_catalog.dto.ProductRatingDTO;
+import com.mazadak.product_catalog.dto.entity.ProductRatingDTO;
 import com.mazadak.product_catalog.entities.ProductRating;
 import com.mazadak.product_catalog.mapper.ProductRatingMapper;
 import com.mazadak.product_catalog.repositories.ProductRatingRepository;

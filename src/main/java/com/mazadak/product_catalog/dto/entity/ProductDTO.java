@@ -1,4 +1,4 @@
-package com.mazadak.product_catalog.dto;
+package com.mazadak.product_catalog.dto.entity;
 
 import com.mazadak.product_catalog.entities.*;
 import com.mazadak.product_catalog.entities.enums.ProductStatus;

@@ -1,6 +1,6 @@
 package com.mazadak.product_catalog.controller;
 
-import com.mazadak.product_catalog.dto.ProductRatingDTO;
+import com.mazadak.product_catalog.dto.entity.ProductRatingDTO;
 import com.mazadak.product_catalog.service.ProductRatingService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;

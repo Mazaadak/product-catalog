@@ -18,16 +18,16 @@ public class ProductRatingService {
     private final ProductRatingMapper productRatingMapper;
 
     public List<ProductRatingDTO> getAllProductRatings() {
-        return productRatingMapper.ToDTOList(productRatingRepository.findAll());
+        return productRatingMapper.toDTOList(productRatingRepository.findAll());
     }
 
     public ProductRatingDTO getProductRatingById(Long ratingId) {
-        return productRatingMapper.ToDTO(productRatingRepository.findById(ratingId).orElse(null));
+        return productRatingMapper.toDTO(productRatingRepository.findById(ratingId).orElse(null));
     }
 
     public ProductRatingDTO createProductRating(ProductRatingDTO productRatingDTO) {
-        ProductRating entity = productRatingMapper.ToEntity(productRatingDTO);
-        return productRatingMapper.ToDTO(productRatingRepository.save(entity));
+        ProductRating entity = productRatingMapper.toEntity(productRatingDTO);
+        return productRatingMapper.toDTO(productRatingRepository.save(entity));
     }
 
     public ProductRatingDTO updateProductRating(ProductRatingDTO productRatingDTO) {
@@ -37,7 +37,7 @@ public class ProductRatingService {
         }
         existing.setRating(productRatingDTO.getRating());
         existing.setReviewText(productRatingDTO.getReviewText());
-        return productRatingMapper.ToDTO(productRatingRepository.save(existing));
+        return productRatingMapper.toDTO(productRatingRepository.save(existing));
     }
 
     public void deleteProductRating(Long ratingId) {
@@ -46,11 +46,11 @@ public class ProductRatingService {
 
     public Page<ProductRatingDTO> getRatingsByProductId(Long productId, Pageable pageable) {
         return productRatingRepository.findByProduct_ProductId(productId, pageable)
-                .map(productRatingMapper::ToDTO);
+                .map(productRatingMapper::toDTO);
     }
 
     public Page<ProductRatingDTO> getRatingsByUserId(Long userId, Pageable pageable) {
         return productRatingRepository.findByUserId(userId, pageable)
-                .map(productRatingMapper::ToDTO);
+                .map(productRatingMapper::toDTO);
     }
 }

@@ -1,0 +1,9 @@
+version: '3.9'
+
+services:
+  product_catalog:
+    image: product_catalog:latest
+    build: .
+    ports:
+      - "18089:18089"
+    restart: unless-stopped

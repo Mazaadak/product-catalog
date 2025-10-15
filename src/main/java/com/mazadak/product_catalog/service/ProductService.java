@@ -194,7 +194,6 @@ public class ProductService {
         productRepository.save(productToDelete);
         deleteProductOutboxEvent(productToDelete);
     }
-
     private void deleteProductOutboxEvent(Product product) {
         try {
             ProductDeletedEvent eventPayload = new ProductDeletedEvent(product.getProductId());

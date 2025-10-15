@@ -1,13 +1,17 @@
 package com.mazadak.product_catalog.entities;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.UUID;
 
 @Entity
 @Table(name = "outbox_event")
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 public class OutboxEvent extends BaseEntity {

@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -47,10 +48,10 @@ public class Product extends BaseEntity {
     private ProductStatus status = ProductStatus.ACTIVE;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductImage> images;
+    private List<ProductImage> images = new ArrayList<>();;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductRating> ratings;
+    private List<ProductRating> ratings = new ArrayList<>();
 
     @OneToOne(mappedBy = "product", fetch = FetchType.LAZY)
     private IdempotencyRecord idempotencyRecord;

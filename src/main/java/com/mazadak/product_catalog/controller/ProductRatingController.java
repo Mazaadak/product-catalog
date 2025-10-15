@@ -1,7 +1,11 @@
 package com.mazadak.product_catalog.controller;
 
 import com.mazadak.product_catalog.dto.entity.ProductRatingDTO;
+import com.mazadak.product_catalog.dto.request.CreateRatingRequestDTO;
+import com.mazadak.product_catalog.dto.request.UpdateRatingRequestDTO;
+import com.mazadak.product_catalog.dto.response.RatingResponseDTO;
 import com.mazadak.product_catalog.service.ProductRatingService;
+import com.mazadak.product_catalog.util.IdempotencyUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,24 +21,43 @@ public class ProductRatingController {
 
     private final ProductRatingService productRatingService;
 
-    @PostMapping("/ratings")
-    public ResponseEntity<ProductRatingDTO> createProductRating(@RequestBody ProductRatingDTO productRatingDTO) {
-        return ResponseEntity.ok(productRatingService.createProductRating(productRatingDTO));
+    @PostMapping("/{productId}/ratings")
+    public ResponseEntity<RatingResponseDTO> createProductRating(
+            @PathVariable Long productId,
+            @RequestBody CreateRatingRequestDTO createRequest,
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @RequestHeader("X-Idempotency-Key") String idempotencyKey) {
+        String requestHash = IdempotencyUtil.calculateHash(createRequest);
+        RatingResponseDTO newRating = productRatingService.createProductRating(idempotencyKey, requestHash,
+                productId, currentUserId, createRequest
+        );
+        return ResponseEntity.ok(newRating);
     }
 
-    @PutMapping("/ratings")
-    public ResponseEntity<ProductRatingDTO> updateProductRating(@RequestBody ProductRatingDTO productRatingDTO) {
-        return ResponseEntity.ok(productRatingService.updateProductRating(productRatingDTO));
+    @PutMapping("/ratings/{ratingId}")
+    public ResponseEntity<RatingResponseDTO> updateProductRating(
+            @PathVariable Long ratingId,
+            @RequestBody UpdateRatingRequestDTO updateRequest,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        RatingResponseDTO updatedRating = productRatingService.updateProductRating(
+                ratingId, currentUserId, updateRequest
+        );
+        return ResponseEntity.ok(updatedRating);
     }
 
     @DeleteMapping("/ratings/{ratingId}")
-    public ResponseEntity<Void> deleteProductRating(@PathVariable Long ratingId) {
-        productRatingService.deleteProductRating(ratingId);
+    public ResponseEntity<Void> deleteProductRating(
+            @PathVariable Long ratingId,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        productRatingService.deleteProductRating(ratingId, currentUserId);
+
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{productId}/ratings")
-    public ResponseEntity<Page<ProductRatingDTO>> getRatingsByProductId(
+    public ResponseEntity<Page<RatingResponseDTO>> getRatingsByProductId(
             @PathVariable Long productId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -44,18 +67,18 @@ public class ProductRatingController {
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.fromString(direction), sortField));
 
-        Page<ProductRatingDTO> ratings = productRatingService.getRatingsByProductId(productId, pageable);
+        Page<RatingResponseDTO> ratings = productRatingService.getRatingsByProductId(productId, pageable);
         return ResponseEntity.ok(ratings);
     }
 
     @GetMapping("/ratings/{ratingId}")
-    public ResponseEntity<ProductRatingDTO> getRatingById(@PathVariable Long ratingId) {
-        ProductRatingDTO rating = productRatingService.getProductRatingById(ratingId);
+    public ResponseEntity<RatingResponseDTO> getRatingById(@PathVariable Long ratingId) {
+        RatingResponseDTO rating = productRatingService.getProductRatingById(ratingId);
         return ResponseEntity.ok(rating);
     }
 
     @GetMapping("/ratings/user/{userId}")
-    public ResponseEntity<Page<ProductRatingDTO>> getRatingsByUserId(
+    public ResponseEntity<Page<RatingResponseDTO>> getRatingsByUserId(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -65,7 +88,7 @@ public class ProductRatingController {
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.fromString(direction), sortField));
 
-        Page<ProductRatingDTO> ratings = productRatingService.getRatingsByUserId(userId, pageable);
+        Page<RatingResponseDTO> ratings = productRatingService.getRatingsByUserId(userId, pageable);
         return ResponseEntity.ok(ratings);
     }
 }

@@ -30,4 +30,7 @@ public class ProductRating extends BaseEntity{
 
     @Lob
     private String reviewText;
+
+    @OneToOne(mappedBy = "rating", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private RatingIdempotencyRecord idempotencyRecord;
 }

@@ -75,3 +75,13 @@ CREATE TABLE outbox_event (
                               processed BOOLEAN DEFAULT FALSE,
                               created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE TABLE rating_idempotency_records (
+                             idempotency_key VARCHAR(255) PRIMARY KEY,
+                             request_hash VARCHAR(64) NOT NULL,
+                             status ENUM('IN_PROGRESS', 'COMPLETED', 'FAILED') NOT NULL DEFAULT 'IN_PROGRESS',
+                             rating_id BIGINT NULL,
+                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                             FOREIGN KEY (rating_id) REFERENCES product_ratings(rating_id) ON DELETE SET NULL
+) ENGINE=InnoDB;

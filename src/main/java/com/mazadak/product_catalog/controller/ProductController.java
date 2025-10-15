@@ -1,8 +1,7 @@
 package com.mazadak.product_catalog.controller;
 
-import com.mazadak.product_catalog.dto.request.CreateProductRequestDTO;
-import com.mazadak.product_catalog.dto.request.UpdateProductRequestDTO;
-import com.mazadak.product_catalog.dto.response.ProductResponseDTO;
+import com.mazadak.product_catalog.dto.request.*;
+import com.mazadak.product_catalog.dto.response.*;
 import com.mazadak.product_catalog.service.ProductService;
 import com.mazadak.product_catalog.util.IdempotencyUtil;
 import lombok.AllArgsConstructor;

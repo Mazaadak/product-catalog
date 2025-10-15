@@ -1,15 +1,20 @@
 package com.mazadak.product_catalog.mapper;
 
-import com.mazadak.product_catalog.dto.entity.ProductDTO;
+import com.mazadak.product_catalog.dto.request.CreateProductRequestDTO;
+import com.mazadak.product_catalog.dto.request.UpdateProductRequestDTO;
+import com.mazadak.product_catalog.dto.response.ProductResponseDTO;
 import com.mazadak.product_catalog.entities.Product;
 import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
 
-import java.util.List;
-
-@Mapper(componentModel = "spring")
+@Mapper(
+        componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        uses = { CategoryMapper.class, ProductRatingMapper.class, ProductImageMapper.class }
+)
 public interface ProductMapper {
-    ProductDTO ToDTO(Product product);
-    Product ToEntity(ProductDTO productDTO);
-    List<ProductDTO> ToDTO(List<Product> products);
-    List<Product> ToEntity(List<ProductDTO> productDTOs);
+    ProductResponseDTO toDTO(Product product);
+    Product toEntity(CreateProductRequestDTO createRequest);
+    void updateEntityFromDto(UpdateProductRequestDTO updateRequest, @MappingTarget Product product);
 }

@@ -56,3 +56,22 @@ CREATE TABLE idempotency_records (
                                  FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE SET NULL,
                                  INDEX idx_product_id (product_id)
 ) ENGINE=InnoDB;
+
+CREATE TABLE product_auctions (
+                                  product_id BIGINT PRIMARY KEY,
+                                  auction_id BIGINT NOT NULL,
+                                  is_active BOOLEAN DEFAULT FALSE,
+                                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                  FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE outbox_event (
+                              id UUID PRIMARY KEY,
+                              aggregate_type VARCHAR(255) NOT NULL,
+                              aggregate_id VARCHAR(255) NOT NULL,
+                              event_type VARCHAR(255) NOT NULL,
+                              payload JSON NOT NULL,
+                              processed BOOLEAN DEFAULT FALSE,
+                              created_at TIMESTAMP DEFAULT NOW()
+);

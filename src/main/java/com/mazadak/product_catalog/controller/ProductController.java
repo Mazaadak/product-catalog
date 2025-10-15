@@ -1,9 +1,10 @@
 package com.mazadak.product_catalog.controller;
 
-import com.mazadak.product_catalog.dto.entity.ProductDTO;
-import com.mazadak.product_catalog.mapper.ProductMapper;
-import com.mazadak.product_catalog.util.IdempotencyUtil;
+import com.mazadak.product_catalog.dto.request.CreateProductRequestDTO;
+import com.mazadak.product_catalog.dto.request.UpdateProductRequestDTO;
+import com.mazadak.product_catalog.dto.response.ProductResponseDTO;
 import com.mazadak.product_catalog.service.ProductService;
+import com.mazadak.product_catalog.util.IdempotencyUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,65 +18,61 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class ProductController {
     private final ProductService productService;
-    private final  ProductMapper productMapper;
+
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductDTO> getProductById(@PathVariable Long productId) {
+    public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable Long productId) {
         return ResponseEntity.ok(productService.getProductById(productId));
     }
 
     @GetMapping
-    public ResponseEntity<Page<ProductDTO>> getAllProducts(
+    public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "productId") String sortField,
             @RequestParam(defaultValue = "asc") String direction) {
 
-        Pageable pageable = PageRequest.of(page, size,
-                Sort.by(Sort.Direction.fromString(direction), sortField));
-
-        Page<ProductDTO> products = productService.getAllProducts(pageable);
-        return ResponseEntity.ok(products);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sortField));
+        return ResponseEntity.ok(productService.getAllProducts(pageable));
     }
 
     @GetMapping("/seller/{sellerId}")
-    public ResponseEntity<Page<ProductDTO>> getProductsBySellerId(
-            @PathVariable Long sellerId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "productId") String sortField,
-            @RequestParam(defaultValue = "asc") String direction) {
-
-        Pageable pageable = PageRequest.of(page, size,
-                Sort.by(Sort.Direction.fromString(direction), sortField));
-
-        Page<ProductDTO> products = productService.getProductsBySellerId(sellerId, pageable);
-        return ResponseEntity.ok(products);
+    public ResponseEntity<Page<ProductResponseDTO>> getProductsBySellerId(@PathVariable Long sellerId, Pageable pageable) {
+        return ResponseEntity.ok(productService.getProductsBySellerId(sellerId, pageable));
     }
 
     @GetMapping("/seller/{sellerId}/{productId}")
-    public ResponseEntity<ProductDTO> getProductBySellerIdAndProductId(
-            @PathVariable Long sellerId,
-            @PathVariable Long productId) {
+    public ResponseEntity<ProductResponseDTO> getProductBySellerIdAndProductId(
+            @PathVariable Long sellerId, @PathVariable Long productId) {
         return ResponseEntity.ok(productService.getProductBySellerIdAndProductId(sellerId, productId));
     }
 
     @PostMapping
-    public ResponseEntity<ProductDTO> createProduct(
+    public ResponseEntity<ProductResponseDTO> createProduct(
             @RequestHeader("X-Idempotency-Key") String idempotencyKey,
-            @RequestBody ProductDTO product) {
-        String requestHash = IdempotencyUtil.calculateHash(product);
-        ProductDTO productDTO = productService.createProduct(idempotencyKey, requestHash, product);
-        return ResponseEntity.ok(productDTO);
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @RequestBody CreateProductRequestDTO createRequest) {
+
+        String requestHash = IdempotencyUtil.calculateHash(createRequest);
+        ProductResponseDTO createdProduct = productService.createProduct(idempotencyKey, requestHash, createRequest, currentUserId);
+        return ResponseEntity.ok(createdProduct);
     }
 
     @PutMapping("/{productId}")
-    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long productId, @RequestBody ProductDTO productDTO) {
-        return ResponseEntity.ok(productService.updateProduct(productId, productMapper.ToEntity(productDTO)));
+    public ResponseEntity<ProductResponseDTO> updateProduct(
+            @PathVariable Long productId,
+            @RequestBody UpdateProductRequestDTO updateRequest,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        ProductResponseDTO updatedProduct = productService.updateProduct(productId, updateRequest, currentUserId);
+        return ResponseEntity.ok(updatedProduct);
     }
 
     @DeleteMapping("/{productId}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long productId) {
-        productService.deleteProduct(productId);
+    public ResponseEntity<Void> deleteProduct(
+            @PathVariable Long productId,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        productService.deleteProduct(productId, currentUserId);
         return ResponseEntity.noContent().build();
     }
 }

@@ -2,14 +2,12 @@ package com.mazadak.product_catalog.entities;
 
 import com.mazadak.product_catalog.entities.enums.IdempotencyStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "idempotency_records")
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder

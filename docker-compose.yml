@@ -77,7 +77,8 @@ services:
       service: network
 
   product_catalog:
-    image: product_catalog:latest
+    build: .
+    image: yousseff2/product_catalog:latest
     container_name: product_catalog
     ports:
       - "18089:18089"

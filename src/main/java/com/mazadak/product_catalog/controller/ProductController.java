@@ -12,6 +12,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/products")
 @AllArgsConstructor
@@ -74,4 +76,13 @@ public class ProductController {
         productService.deleteProduct(productId, currentUserId);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/batch")
+    public ResponseEntity<List<ProductResponseDTO>> getProductsByIds(@RequestBody List<Long> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(productService.getProductsByIds(productIds));
+    }
+
 }

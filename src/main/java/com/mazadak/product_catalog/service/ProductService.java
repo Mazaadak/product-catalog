@@ -20,16 +20,19 @@ import com.mazadak.product_catalog.repositories.IdempotencyRecordRepository;
 import com.mazadak.product_catalog.repositories.OutboxEventRepository;
 import com.mazadak.product_catalog.repositories.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -220,5 +223,26 @@ public class ProductService {
     public Page<ProductResponseDTO> getProductsBySellerId(Long sellerId, Pageable pageable) {
         Page<Product> products = productRepository.findBySellerId(sellerId, pageable);
         return products.map(productMapper::toDTO);
+    }
+
+    public List<ProductResponseDTO> getProductsByIds(List<Long> productIds) {
+        log.info("Fetching products by IDs: {}", productIds);
+        List<Product> products = productRepository.findAllById(productIds);
+        if (products.size() != productIds.size()) {
+            Set<Long> foundIds = products.stream()
+                .map(Product::getProductId)
+                .collect(Collectors.toSet());
+
+            List<Long> missingIds = productIds.stream()
+                .filter(id -> !foundIds.contains(id))
+                .collect(Collectors.toList());
+
+            log.error("Products not found with IDs: {}", missingIds);
+            throw new ResourceNotFoundException("Products not found with IDs: " + missingIds);
+        }
+        log.info("Products found with IDs: {}", productIds);
+        return products.stream()
+            .map(productMapper::toDTO)
+            .collect(Collectors.toList());
     }
 }

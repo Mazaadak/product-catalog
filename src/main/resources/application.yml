@@ -1,12 +1,11 @@
 server:
-  port: 18089
+  port: 18099
 
 spring:
   application:
-    name: product_catalog
-
+    name: product-catalog
   config:
-    import: "optional:configserver:http://localhost:18071/"
+    import: "configserver:http://localhost:18071/"
 
   datasource:
     url: jdbc:h2:mem:product_catalog;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
@@ -33,7 +32,4 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
 
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:18050/eureka/
+

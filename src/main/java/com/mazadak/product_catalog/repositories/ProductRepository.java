@@ -7,11 +7,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, UUID> {
     Page<Product> findAll(Pageable pageable);
-    Page<Product> findBySellerId(Long sellerId, Pageable pageable);
-    Optional<Product> findProductBySellerIdAndProductId(Long sellerId, Long productId);
+    Page<Product> findBySellerId(UUID sellerId, Pageable pageable);
+    Optional<Product> findProductBySellerIdAndProductId(UUID sellerId, UUID productId);
 
 }

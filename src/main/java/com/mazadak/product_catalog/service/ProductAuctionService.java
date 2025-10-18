@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class ProductAuctionService {
@@ -15,7 +17,7 @@ public class ProductAuctionService {
     private final ProductRepository productRepository;
 
     @Transactional
-    public void markAuctionAsActive(Long productId, Long auctionId) {
+    public void markAuctionAsActive(UUID productId, Long auctionId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found: " + productId));
 
@@ -30,14 +32,14 @@ public class ProductAuctionService {
     }
 
     @Transactional
-    public void markAuctionAsInactive(Long productId) {
+    public void markAuctionAsInactive(UUID productId) {
         productAuctionRepository.findById(productId).ifPresent(productAuction -> {
             productAuction.setActive(false);
             productAuctionRepository.save(productAuction);
         });
     }
 
-    public boolean isAuctionActive(Long productId) {
+    public boolean isAuctionActive(UUID productId) {
         return productAuctionRepository.findById(productId)
                 .map(ProductAuction::isActive)
                 .orElse(false);

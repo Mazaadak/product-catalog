@@ -14,6 +14,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/products")
 @AllArgsConstructor
@@ -23,9 +25,9 @@ public class ProductRatingController {
 
     @PostMapping("/{productId}/ratings")
     public ResponseEntity<RatingResponseDTO> createProductRating(
-            @PathVariable Long productId,
+            @PathVariable UUID productId,
             @RequestBody CreateRatingRequestDTO createRequest,
-            @RequestHeader("X-User-Id") Long currentUserId,
+            @RequestHeader("X-User-Id") UUID currentUserId,
             @RequestHeader("X-Idempotency-Key") String idempotencyKey) {
         String requestHash = IdempotencyUtil.calculateHash(createRequest);
         RatingResponseDTO newRating = productRatingService.createProductRating(idempotencyKey, requestHash,
@@ -38,7 +40,7 @@ public class ProductRatingController {
     public ResponseEntity<RatingResponseDTO> updateProductRating(
             @PathVariable Long ratingId,
             @RequestBody UpdateRatingRequestDTO updateRequest,
-            @RequestHeader("X-User-Id") Long currentUserId) {
+            @RequestHeader("X-User-Id") UUID currentUserId) {
 
         RatingResponseDTO updatedRating = productRatingService.updateProductRating(
                 ratingId, currentUserId, updateRequest
@@ -49,7 +51,7 @@ public class ProductRatingController {
     @DeleteMapping("/ratings/{ratingId}")
     public ResponseEntity<Void> deleteProductRating(
             @PathVariable Long ratingId,
-            @RequestHeader("X-User-Id") Long currentUserId) {
+            @RequestHeader("X-User-Id") UUID currentUserId) {
 
         productRatingService.deleteProductRating(ratingId, currentUserId);
 
@@ -58,7 +60,7 @@ public class ProductRatingController {
 
     @GetMapping("/{productId}/ratings")
     public ResponseEntity<Page<RatingResponseDTO>> getRatingsByProductId(
-            @PathVariable Long productId,
+            @PathVariable UUID productId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "ratingId") String sortField,
@@ -79,7 +81,7 @@ public class ProductRatingController {
 
     @GetMapping("/ratings/user/{userId}")
     public ResponseEntity<Page<RatingResponseDTO>> getRatingsByUserId(
-            @PathVariable Long userId,
+            @PathVariable UUID userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "ratingId") String sortField,

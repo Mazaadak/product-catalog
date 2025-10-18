@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Getter
 @Setter
@@ -22,7 +24,7 @@ public class ProductRating extends BaseEntity{
     private Product product;
 
     @Column(nullable = false)
-    private Long userId;
+    private UUID userId;
 
     @Column(nullable = false)
     @Min(1) @Max(5)

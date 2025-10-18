@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/products")
@@ -21,7 +22,7 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable Long productId) {
+    public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable UUID productId) {
         return ResponseEntity.ok(productService.getProductById(productId));
     }
 
@@ -37,20 +38,20 @@ public class ProductController {
     }
 
     @GetMapping("/seller/{sellerId}")
-    public ResponseEntity<Page<ProductResponseDTO>> getProductsBySellerId(@PathVariable Long sellerId, Pageable pageable) {
+    public ResponseEntity<Page<ProductResponseDTO>> getProductsBySellerId(@PathVariable UUID sellerId, Pageable pageable) {
         return ResponseEntity.ok(productService.getProductsBySellerId(sellerId, pageable));
     }
 
     @GetMapping("/seller/{sellerId}/{productId}")
     public ResponseEntity<ProductResponseDTO> getProductBySellerIdAndProductId(
-            @PathVariable Long sellerId, @PathVariable Long productId) {
+            @PathVariable UUID sellerId, @PathVariable UUID productId) {
         return ResponseEntity.ok(productService.getProductBySellerIdAndProductId(sellerId, productId));
     }
 
     @PostMapping
     public ResponseEntity<ProductResponseDTO> createProduct(
             @RequestHeader("X-Idempotency-Key") String idempotencyKey,
-            @RequestHeader("X-User-Id") Long currentUserId,
+            @RequestHeader("X-User-Id") UUID currentUserId,
             @RequestBody CreateProductRequestDTO createRequest) {
 
         String requestHash = IdempotencyUtil.calculateHash(createRequest);
@@ -60,9 +61,9 @@ public class ProductController {
 
     @PutMapping("/{productId}")
     public ResponseEntity<ProductResponseDTO> updateProduct(
-            @PathVariable Long productId,
+            @PathVariable UUID productId,
             @RequestBody UpdateProductRequestDTO updateRequest,
-            @RequestHeader("X-User-Id") Long currentUserId) {
+            @RequestHeader("X-User-Id") UUID currentUserId) {
 
         ProductResponseDTO updatedProduct = productService.updateProduct(productId, updateRequest, currentUserId);
         return ResponseEntity.ok(updatedProduct);
@@ -70,15 +71,15 @@ public class ProductController {
 
     @DeleteMapping("/{productId}")
     public ResponseEntity<Void> deleteProduct(
-            @PathVariable Long productId,
-            @RequestHeader("X-User-Id") Long currentUserId) {
+            @PathVariable UUID productId,
+            @RequestHeader("X-User-Id") UUID currentUserId) {
 
         productService.deleteProduct(productId, currentUserId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/batch")
-    public ResponseEntity<List<ProductResponseDTO>> getProductsByIds(@RequestBody List<Long> productIds) {
+    public ResponseEntity<List<ProductResponseDTO>> getProductsByIds(@RequestBody List<UUID> productIds) {
         if (productIds == null || productIds.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }

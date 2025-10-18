@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "products")
@@ -21,10 +22,10 @@ import java.util.List;
 public class Product extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long productId;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID productId;
 
-    private Long sellerId;
+    private UUID sellerId;
 
     @Column(length = 100, nullable = false)
     private String title;

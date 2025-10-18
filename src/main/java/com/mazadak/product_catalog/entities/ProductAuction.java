@@ -3,6 +3,8 @@ package com.mazadak.product_catalog.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "product_auctions")
 @Getter
@@ -12,7 +14,7 @@ import lombok.*;
 public class ProductAuction extends BaseEntity {
 
     @Id
-    private Long productId;
+    private UUID productId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId

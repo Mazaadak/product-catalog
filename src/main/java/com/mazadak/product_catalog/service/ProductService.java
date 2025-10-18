@@ -47,14 +47,14 @@ public class ProductService {
         return products.map(productMapper::toDTO);
     }
 
-    public ProductResponseDTO getProductById(Long productId) {
+    public ProductResponseDTO getProductById(UUID productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
         return productMapper.toDTO(product);
     }
 
     @Transactional
-    public ProductResponseDTO createProduct(String idempotencyKey, String requestHash, CreateProductRequestDTO createRequest, Long currentUserId) {
+    public ProductResponseDTO createProduct(String idempotencyKey, String requestHash, CreateProductRequestDTO createRequest, UUID currentUserId) {
         Optional<ProductResponseDTO> existingResponse = handleIdempotencyCheck(idempotencyKey, requestHash);
         if (existingResponse.isPresent()) {
             return existingResponse.get();
@@ -137,7 +137,7 @@ public class ProductService {
 
 
     @Transactional
-    public ProductResponseDTO updateProduct(Long productId, UpdateProductRequestDTO updateRequest, Long currentUserId) {
+    public ProductResponseDTO updateProduct(UUID productId, UpdateProductRequestDTO updateRequest, UUID currentUserId) {
         if(productAuctionService.isAuctionActive(productId)) {
             throw new IllegalStateException("Cannot edit product while an auction is active.");
         }
@@ -182,7 +182,7 @@ public class ProductService {
     }
 
     @Transactional
-    public void deleteProduct(Long productId, Long currentUserId) {
+    public void deleteProduct(UUID productId, UUID currentUserId) {
         if(productAuctionService.isAuctionActive(productId)) {
             throw new IllegalStateException("Cannot edit product while an auction is active.");
         }
@@ -214,26 +214,26 @@ public class ProductService {
         }
     }
 
-    public ProductResponseDTO getProductBySellerIdAndProductId(Long sellerId, Long productId) {
+    public ProductResponseDTO getProductBySellerIdAndProductId(UUID sellerId, UUID productId) {
         Product product = productRepository.findProductBySellerIdAndProductId(sellerId, productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found for this seller."));
         return productMapper.toDTO(product);
     }
 
-    public Page<ProductResponseDTO> getProductsBySellerId(Long sellerId, Pageable pageable) {
+    public Page<ProductResponseDTO> getProductsBySellerId(UUID sellerId, Pageable pageable) {
         Page<Product> products = productRepository.findBySellerId(sellerId, pageable);
         return products.map(productMapper::toDTO);
     }
 
-    public List<ProductResponseDTO> getProductsByIds(List<Long> productIds) {
+    public List<ProductResponseDTO> getProductsByIds(List<UUID> productIds) {
         log.info("Fetching products by IDs: {}", productIds);
         List<Product> products = productRepository.findAllById(productIds);
         if (products.size() != productIds.size()) {
-            Set<Long> foundIds = products.stream()
+            Set<UUID> foundIds = products.stream()
                 .map(Product::getProductId)
                 .collect(Collectors.toSet());
 
-            List<Long> missingIds = productIds.stream()
+            List<UUID> missingIds = productIds.stream()
                 .filter(id -> !foundIds.contains(id))
                 .collect(Collectors.toList());
 

@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -48,8 +49,8 @@ public class ProductRatingService {
     public RatingResponseDTO createProductRating(
             String idempotencyKey,
             String requestHash,
-            Long productId,
-            Long currentUserId,
+            UUID productId,
+            UUID currentUserId,
             CreateRatingRequestDTO createRequest) {
 
         Optional<RatingResponseDTO> existingRecordOpt = handleIdempotencyCheck(idempotencyKey, requestHash);
@@ -143,7 +144,7 @@ public class ProductRatingService {
 
 
     @Transactional
-    public RatingResponseDTO updateProductRating(Long ratingId, Long currentUserId, UpdateRatingRequestDTO updateRequest) {
+    public RatingResponseDTO updateProductRating(Long ratingId, UUID currentUserId, UpdateRatingRequestDTO updateRequest) {
         ProductRating existingRating = productRatingRepository.findById(ratingId)
                 .orElseThrow(() -> new RuntimeException("Rating not found with ID: " + ratingId));
 
@@ -183,7 +184,7 @@ public class ProductRatingService {
         }
     }
     @Transactional
-    public void deleteProductRating(Long ratingId, Long currentUserId) {
+    public void deleteProductRating(Long ratingId, UUID currentUserId) {
         ProductRating rating = productRatingRepository.findById(ratingId)
                 .orElseThrow(() -> new RuntimeException("Rating not found with ID: " + ratingId));
         if (!rating.getUserId().equals(currentUserId)) {
@@ -213,12 +214,12 @@ public class ProductRatingService {
             throw new RuntimeException("Error creating outbox event for rating deletion", e);
         }
     }
-    public Page<RatingResponseDTO> getRatingsByProductId(Long productId, Pageable pageable) {
+    public Page<RatingResponseDTO> getRatingsByProductId(UUID productId, Pageable pageable) {
         return productRatingRepository.findByProduct_ProductId(productId, pageable)
                 .map(productRatingMapper::toDTO);
     }
 
-    public Page<RatingResponseDTO> getRatingsByUserId(Long userId, Pageable pageable) {
+    public Page<RatingResponseDTO> getRatingsByUserId(UUID userId, Pageable pageable) {
         return productRatingRepository.findByUserId(userId, pageable)
                 .map(productRatingMapper::toDTO);
     }

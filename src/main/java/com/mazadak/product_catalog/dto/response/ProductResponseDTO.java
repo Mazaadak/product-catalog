@@ -7,11 +7,12 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 public class ProductResponseDTO {
-    private Long productId;
-    private Long sellerId;
+    private UUID productId;
+    private UUID sellerId;
     private String title;
     private String description;
     private BigDecimal price;

@@ -35,7 +35,7 @@ public class Product extends BaseEntity {
     @JsonBackReference
     private Category category;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private BigDecimal price;

@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,25 +28,11 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "productId") String sortField,
-            @RequestParam(defaultValue = "asc") String direction) {
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sortField));
-        return ResponseEntity.ok(productService.getAllProducts(pageable));
-    }
-
-    @GetMapping("/seller/{sellerId}")
-    public ResponseEntity<Page<ProductResponseDTO>> getProductsBySellerId(@PathVariable UUID sellerId, Pageable pageable) {
-        return ResponseEntity.ok(productService.getProductsBySellerId(sellerId, pageable));
-    }
-
-    @GetMapping("/seller/{sellerId}/{productId}")
-    public ResponseEntity<ProductResponseDTO> getProductBySellerIdAndProductId(
-            @PathVariable UUID sellerId, @PathVariable UUID productId) {
-        return ResponseEntity.ok(productService.getProductBySellerIdAndProductId(sellerId, productId));
+    Page<ProductResponseDTO> getProductsByCriteria(
+            @ModelAttribute ProductFilterDTO filter,
+            Pageable pageable
+    ) {
+        return productService.getProductsByCriteria(filter, pageable);
     }
 
     @PostMapping

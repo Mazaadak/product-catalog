@@ -6,6 +6,7 @@ import com.mazadak.product_catalog.dto.event.ProductCreatedEvent;
 import com.mazadak.product_catalog.dto.event.ProductDeletedEvent;
 import com.mazadak.product_catalog.dto.event.ProductUpdatedEvent;
 import com.mazadak.product_catalog.dto.request.CreateProductRequestDTO;
+import com.mazadak.product_catalog.dto.request.ProductFilterDTO;
 import com.mazadak.product_catalog.dto.request.UpdateProductRequestDTO;
 import com.mazadak.product_catalog.dto.response.ProductResponseDTO;
 import com.mazadak.product_catalog.entities.Category;
@@ -19,11 +20,13 @@ import com.mazadak.product_catalog.repositories.CategoryRepository;
 import com.mazadak.product_catalog.repositories.IdempotencyRecordRepository;
 import com.mazadak.product_catalog.repositories.OutboxEventRepository;
 import com.mazadak.product_catalog.repositories.ProductRepository;
+import com.mazadak.product_catalog.repositories.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -244,5 +247,11 @@ public class ProductService {
         return products.stream()
             .map(productMapper::toDTO)
             .collect(Collectors.toList());
+    }
+
+    public Page<ProductResponseDTO> getProductsByCriteria(ProductFilterDTO filter, Pageable pageable) {
+        Specification<Product> specification = ProductSpecification.fromFilter(filter);
+        return productRepository.findAll(specification, pageable)
+                .map(productMapper::toDTO);
     }
 }

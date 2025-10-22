@@ -2,7 +2,7 @@ spring:
   application:
     name: product-catalog
   config:
-    import: "configserver:http://localhost:18071/"
+    import: "optional:configserver:http://localhost:18071/"
 
   datasource:
     url: jdbc:h2:mem:product_catalog;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE

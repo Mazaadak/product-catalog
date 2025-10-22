@@ -9,7 +9,7 @@
 
 
     <groupId>com.mazadak</groupId>
-    <artifactId>product_catalog</artifactId>
+    <artifactId>product-catalog</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>product_catalog</name>
     <description>Demo project for Spring Boot</description>

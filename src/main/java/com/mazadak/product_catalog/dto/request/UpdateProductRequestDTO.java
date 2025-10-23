@@ -12,7 +12,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateProductRequestDTO {
-    private UUID productId;
     private String title;
     private String description;
     private BigDecimal price;

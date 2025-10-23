@@ -46,7 +46,7 @@ public class Product extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private ProductStatus status = ProductStatus.ACTIVE;
+    private ProductStatus status = ProductStatus.INACTIVE; // create drafts by default
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images = new ArrayList<>();;

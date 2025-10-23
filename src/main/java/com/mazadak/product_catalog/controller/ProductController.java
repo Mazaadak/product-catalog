@@ -37,7 +37,7 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<ProductResponseDTO> createProduct(
-            @RequestHeader("X-Idempotency-Key") String idempotencyKey,
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @RequestHeader("X-User-Id") UUID currentUserId,
             @RequestBody CreateProductRequestDTO createRequest) {
 

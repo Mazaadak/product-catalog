@@ -28,7 +28,7 @@ public class ProductRatingController {
             @PathVariable UUID productId,
             @RequestBody CreateRatingRequestDTO createRequest,
             @RequestHeader("X-User-Id") UUID currentUserId,
-            @RequestHeader("X-Idempotency-Key") String idempotencyKey) {
+            @RequestHeader("Idempotency-Key") String idempotencyKey) {
         String requestHash = IdempotencyUtil.calculateHash(createRequest);
         RatingResponseDTO newRating = productRatingService.createProductRating(idempotencyKey, requestHash,
                 productId, currentUserId, createRequest

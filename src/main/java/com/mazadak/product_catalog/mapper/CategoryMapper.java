@@ -13,7 +13,6 @@ public interface CategoryMapper {
 
     Category toEntity(CreateCategoryRequestDTO createRequest);
 
-    @Mapping(source = "parentCategory.categoryId", target = "parentId")
     CategoryDTO toDTO(Category category);
 
     List<CategoryDTO> toDTOList(List<Category> categories);

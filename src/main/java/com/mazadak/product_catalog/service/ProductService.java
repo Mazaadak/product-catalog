@@ -14,7 +14,9 @@ import com.mazadak.product_catalog.entities.IdempotencyRecord;
 import com.mazadak.product_catalog.entities.OutboxEvent;
 import com.mazadak.product_catalog.entities.Product;
 import com.mazadak.product_catalog.entities.enums.IdempotencyStatus;
-import com.mazadak.product_catalog.entities.enums.ProductStatus;
+import com.mazadak.product_catalog.entities.enums.ProductType;
+import com.mazadak.product_catalog.exception.ResourceNotFoundException;
+import com.mazadak.product_catalog.exception.UnauthorizedException;
 import com.mazadak.product_catalog.mapper.ProductMapper;
 import com.mazadak.product_catalog.repositories.CategoryRepository;
 import com.mazadak.product_catalog.repositories.IdempotencyRecordRepository;
@@ -23,13 +25,13 @@ import com.mazadak.product_catalog.repositories.ProductRepository;
 import com.mazadak.product_catalog.repositories.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,7 +54,7 @@ public class ProductService {
 
     public ProductResponseDTO getProductById(UUID productId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
         return productMapper.toDTO(product);
     }
 
@@ -78,8 +80,6 @@ public class ProductService {
             Category category = categoryRepository.findById(createRequest.getCategoryId())
                     .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + createRequest.getCategoryId()));
             productEntity.setCategory(category);
-
-            productEntity.setStatus(ProductStatus.ACTIVE);
 
             Product savedProduct = productRepository.save(productEntity);
             createProductOutboxEvent(savedProduct);
@@ -187,18 +187,21 @@ public class ProductService {
     }
 
     @Transactional
-    public void deleteProduct(UUID productId, UUID currentUserId) {
+    public void deleteProduct(UUID productId) {
         if(productAuctionService.isAuctionActive(productId)) {
             throw new IllegalStateException("Cannot edit product while an auction is active.");
         }
+
         Product productToDelete = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
 
-        if (!productToDelete.getSellerId().equals(currentUserId)) {
-            throw new IllegalStateException("You do not have permission to delete this product.");
-        }
+//        if (!productToDelete.getSellerId().equals(currentUserId)) {
+//            throw new IllegalStateException("You do not have permission to delete this product.");
+//        }
 
-        productToDelete.setStatus(ProductStatus.DELETED);
+        productToDelete.setDeleted(true);
+        productToDelete.setType(ProductType.NONE);
+
         productRepository.save(productToDelete);
         deleteProductOutboxEvent(productToDelete);
     }
@@ -252,16 +255,50 @@ public class ProductService {
     }
 
     public Page<ProductResponseDTO> getProductsByCriteria(ProductFilterDTO filter, Pageable pageable) {
-        Specification<Product> specification = ProductSpecification.fromFilter(filter);
+        Specification<Product> specification = ProductSpecification.fromFilter(filter)
+                .and((root, query, builder) -> builder.isFalse(root.get("isDeleted")));
+
         return productRepository.findAll(specification, pageable)
                 .map(productMapper::toDTO);
     }
 
-    public List<ProductResponseDTO> getMyListings(UUID currentUserId, Pageable pageable) {
-        log.info("Fetching listings for current user: {}", currentUserId);
-        return productRepository.findBySellerId(currentUserId, pageable)
-                .stream()
-                .map(productMapper::toDTO)
-                .collect(Collectors.toList());
+    public void setProductType(UUID productId, ProductType type) {
+        var product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
+        product.setType(type);
+        productRepository.save(product);
+    }
+
+    public void setProductPrice(UUID productId, BigDecimal price) {
+        var product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
+        product.setPrice(price);
+        productRepository.save(product);
+    }
+
+    public void assertProductExists(UUID productId) {
+        if (!productRepository.existsById(productId)) {
+            throw new ResourceNotFoundException("Product", "id", productId.toString());
+        }
+    }
+
+    public void assertProductIsNotDeleted(UUID productId) {
+        var product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
+        if (product.isDeleted()) {
+            throw new ResourceNotFoundException("Product", "id", productId.toString());
+        }
+    }
+
+    public void assertUserOwnsProduct(UUID userId, UUID productId) {
+        var product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
+
+        if (!product.getSellerId().equals(userId)) {
+            throw new UnauthorizedException(
+                    "User does not own this product. Expected sellerId=%s but found %s"
+                            .formatted(product.getSellerId(), userId)
+            );
+        }
     }
 }

@@ -1,7 +1,6 @@
 package com.mazadak.product_catalog.dto.request;
 
 import com.mazadak.product_catalog.dto.response.CategoryDTO;
-import com.mazadak.product_catalog.entities.enums.ProductStatus;
 import com.mazadak.product_catalog.entities.enums.ProductType;
 
 import java.math.BigDecimal;
@@ -16,7 +15,6 @@ public record ProductFilterDTO(
         BigDecimal minPrice,
         BigDecimal maxPrice,
         ProductType type,
-        ProductStatus status,
         List<Long> categories,
         Integer maxRating
 ) {

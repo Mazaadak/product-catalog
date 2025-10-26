@@ -8,8 +8,5 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateCategoryRequestDTO {
-
     private String name;
-
-    private Long parentId;
 }

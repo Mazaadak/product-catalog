@@ -27,7 +27,7 @@ public class CategoryController {
 
     @GetMapping
     public ResponseEntity<List<CategoryDTO>> getAllCategories() {
-        List<CategoryDTO> categories = categoryService.getTopLevelCategories();
+        List<CategoryDTO> categories = categoryService.getCategories();
         return ResponseEntity.ok(categories);
     }
 
@@ -35,12 +35,6 @@ public class CategoryController {
     public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long categoryId) {
         CategoryDTO category = categoryService.getCategoryById(categoryId);
         return ResponseEntity.ok(category);
-    }
-
-    @GetMapping("/{categoryId}/subcategories")
-    public ResponseEntity<List<CategoryDTO>> getSubcategories(@PathVariable Long categoryId) {
-        List<CategoryDTO> subcategories = categoryService.getSubcategories(categoryId);
-        return ResponseEntity.ok(subcategories);
     }
 
     @PutMapping("/{categoryId}")

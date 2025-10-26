@@ -2,7 +2,6 @@ package com.mazadak.product_catalog.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.mazadak.product_catalog.entities.enums.ProductStatus;
 import com.mazadak.product_catalog.entities.enums.ProductType;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -20,7 +19,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Product extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID productId;
@@ -30,9 +28,8 @@ public class Product extends BaseEntity {
     @Column(length = 100, nullable = false)
     private String title;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    @JsonBackReference
+    @ManyToOne(fetch = FetchType.EAGER)  // ADD THIS
+    @JoinColumn(name = "category_id")
     private Category category;
 
     @Column(columnDefinition = "TEXT")
@@ -42,21 +39,19 @@ public class Product extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private ProductType type;
+    private ProductType type = ProductType.NONE;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20, nullable = false)
-    private ProductStatus status = ProductStatus.INACTIVE; // create drafts by default
+    private boolean isDeleted = false;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductImage> images = new ArrayList<>();;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)  // TODO: CHANGE TO LAZE
+    private List<ProductImage> images = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)  // TODO: CHANGE TO LAZE
     private List<ProductRating> ratings = new ArrayList<>();
 
-    @OneToOne(mappedBy = "product", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "product", fetch = FetchType.EAGER)  // TODO: CHANGE TO LAZE
     private IdempotencyRecord idempotencyRecord;
 
-    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)  // TODO: CHANGE TO LAZE
     private ProductAuction productAuction;
 }

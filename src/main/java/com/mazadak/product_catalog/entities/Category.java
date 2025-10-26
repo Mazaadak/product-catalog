@@ -25,16 +25,7 @@ public class Category extends BaseEntity {
     @Column(unique = true, nullable = false, length = 50)
     private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    @JsonIgnore
-    private Category parentCategory;
-
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Product> products = new ArrayList<>();
 
-    @OneToMany(mappedBy = "parentCategory", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<Category> subcategories = new ArrayList<>();
 }

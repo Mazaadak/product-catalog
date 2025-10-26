@@ -1,7 +1,6 @@
 package com.mazadak.product_catalog.dto.response;
 
 import com.mazadak.product_catalog.dto.entity.*;
-import com.mazadak.product_catalog.entities.enums.ProductStatus;
 import com.mazadak.product_catalog.entities.enums.ProductType;
 import lombok.Data;
 
@@ -17,7 +16,6 @@ public class ProductResponseDTO {
     private String description;
     private BigDecimal price;
     private ProductType type;
-    private ProductStatus status;
 
     private CategoryDTO category;
     private List<ProductImageDTO> images;

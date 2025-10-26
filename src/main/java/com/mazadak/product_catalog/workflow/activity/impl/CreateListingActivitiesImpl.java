@@ -4,7 +4,6 @@ import com.mazadak.product_catalog.client.AuctionClient;
 import com.mazadak.product_catalog.client.InventoryClient;
 import com.mazadak.product_catalog.dto.client.AddInventoryRequest;
 import com.mazadak.product_catalog.dto.request.CreateAuctionRequest;
-import com.mazadak.product_catalog.entities.enums.ListingStatus;
 import com.mazadak.product_catalog.entities.enums.ProductType;
 import com.mazadak.product_catalog.exception.ProductListingAlreadyExistsException;
 import com.mazadak.product_catalog.service.ProductService;
@@ -31,6 +30,11 @@ public class CreateListingActivitiesImpl implements CreateListingActivities {
     }
 
     @Override
+    public void validateProductIsNotDeleted(UUID productId) {
+        productService.assertProductIsNotDeleted(productId);
+    }
+
+    @Override
     public void validateProductHasNoListing(UUID productId) {
         Boolean auctionExists = auctionClient.existsByProductId(productId).getBody();
         Boolean inventoryExists = inventoryClient.existsByProductId(productId).getBody();
@@ -45,11 +49,6 @@ public class CreateListingActivitiesImpl implements CreateListingActivities {
     @Override
     public void setProductPrice(UUID productId, BigDecimal price) {
         productService.setProductPrice(productId, price);
-    }
-
-    @Override
-    public void setListingStatus(UUID productId, ListingStatus status) {
-        productService.setListingStatus(productId, status);
     }
 
     @Override

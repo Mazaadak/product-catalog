@@ -2,8 +2,6 @@ package com.mazadak.product_catalog.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.mazadak.product_catalog.entities.enums.ListingStatus;
-import com.mazadak.product_catalog.entities.enums.ProductStatus;
 import com.mazadak.product_catalog.entities.enums.ProductType;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -21,7 +19,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Product extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID productId;
@@ -45,12 +42,7 @@ public class Product extends BaseEntity {
     @Column(length = 20, nullable = false)
     private ProductType type = ProductType.NONE;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20, nullable = false)
-    private ProductStatus status = ProductStatus.INACTIVE; // create drafts by default
-
-    @Enumerated(EnumType.STRING)
-    private ListingStatus listingStatus = ListingStatus.NONE;
+    private boolean isDeleted = false;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images = new ArrayList<>();;

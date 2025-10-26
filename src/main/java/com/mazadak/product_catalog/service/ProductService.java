@@ -14,8 +14,6 @@ import com.mazadak.product_catalog.entities.IdempotencyRecord;
 import com.mazadak.product_catalog.entities.OutboxEvent;
 import com.mazadak.product_catalog.entities.Product;
 import com.mazadak.product_catalog.entities.enums.IdempotencyStatus;
-import com.mazadak.product_catalog.entities.enums.ListingStatus;
-import com.mazadak.product_catalog.entities.enums.ProductStatus;
 import com.mazadak.product_catalog.entities.enums.ProductType;
 import com.mazadak.product_catalog.exception.ResourceNotFoundException;
 import com.mazadak.product_catalog.mapper.ProductMapper;
@@ -199,7 +197,7 @@ public class ProductService {
             throw new IllegalStateException("You do not have permission to delete this product.");
         }
 
-        productToDelete.setStatus(ProductStatus.DELETED);
+        productToDelete.setDeleted(true);
         productRepository.save(productToDelete);
         deleteProductOutboxEvent(productToDelete);
     }
@@ -278,16 +276,11 @@ public class ProductService {
         }
     }
 
-    public ListingStatus getListingStatus(UUID productId) {
+    public void assertProductIsNotDeleted(UUID productId) {
         var product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
-        return product.getListingStatus();
-    }
-
-    public void setListingStatus(UUID productId, ListingStatus status) {
-        var product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
-        product.setListingStatus(status);
-        productRepository.save(product);
+        if (product.isDeleted()) {
+            throw new ResourceNotFoundException("Product", "id", productId.toString());
+        }
     }
 }

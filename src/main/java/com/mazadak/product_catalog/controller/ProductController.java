@@ -2,7 +2,6 @@ package com.mazadak.product_catalog.controller;
 
 import com.mazadak.product_catalog.dto.request.*;
 import com.mazadak.product_catalog.dto.response.*;
-import com.mazadak.product_catalog.entities.enums.ListingStatus;
 import com.mazadak.product_catalog.service.ProductService;
 import com.mazadak.product_catalog.util.IdempotencyUtil;
 import com.mazadak.product_catalog.workflow.starter.ListingCreationStarter;

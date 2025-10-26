@@ -4,7 +4,6 @@ import com.mazadak.product_catalog.dto.request.ProductFilterDTO;
 import com.mazadak.product_catalog.dto.response.CategoryDTO;
 import com.mazadak.product_catalog.entities.Product;
 import com.mazadak.product_catalog.entities.ProductRating;
-import com.mazadak.product_catalog.entities.enums.ProductStatus;
 import com.mazadak.product_catalog.entities.enums.ProductType;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
@@ -59,13 +58,6 @@ public class ProductSpecification {
         };
     }
 
-    public static Specification<Product> hasStatus(ProductStatus status) {
-        return (root, query, builder) -> {
-            if (status == null) return null;
-            return builder.equal(root.get("status"), status);
-        };
-    }
-
     public static Specification<Product> isInAnyCategory(List<Long> categories) {
         return (root, query, builder) -> {
             if (categories == null || categories.isEmpty()) return null;
@@ -94,7 +86,6 @@ public class ProductSpecification {
                 containsDescription(filter.description()),
                 hasPriceBetween(filter.minPrice(), filter.maxPrice()),
                 hasType(filter.type()),
-                hasStatus(filter.status()),
                 isInAnyCategory(filter.categories()),
                 hasRatingLowerThan(filter.maxRating())
         );

@@ -2,7 +2,6 @@ package com.mazadak.product_catalog.workflow.impl;
 
 import com.mazadak.product_catalog.dto.request.CreateListingRequest;
 import com.mazadak.product_catalog.dto.response.ListingCreationResult;
-import com.mazadak.product_catalog.entities.enums.ListingStatus;
 import com.mazadak.product_catalog.entities.enums.ProductType;
 import com.mazadak.product_catalog.workflow.ListingCreationWorkflow;
 import com.mazadak.product_catalog.workflow.activity.CreateListingActivities;
@@ -43,14 +42,13 @@ public class ListingCreationWorkflowImpl implements ListingCreationWorkflow {
             activities.validateProductExists(request.productId());
             log.info("Product {} exists", request.productId());
 
-            // STEP 2: set listing status to CREATING
-            activities.setListingStatus(request.productId(), ListingStatus.CREATING);
-            saga.addCompensation(() -> activities.setListingStatus(request.productId(), ListingStatus.FAILED));
+            // STEP 2: validate product is not deleted
+            activities.validateProductIsNotDeleted(request.productId());
+            log.info("Product {} is not deleted", request.productId());
 
             // STEP 3: validate product has not associated listing
             activities.validateProductHasNoListing(request.productId());
             log.info("Product {} has no associated listings", request.productId());
-
 
             // STEP 4: create listing
             // CASE 1: auction listing
@@ -75,9 +73,6 @@ public class ListingCreationWorkflowImpl implements ListingCreationWorkflow {
             activities.setProductListingType(request.productId(), request.type());
             saga.addCompensation(() -> activities.setProductListingType(request.productId(), ProductType.NONE));
             log.info("Set product {} listing type to {}", request.productId(), request.type());
-
-            // STEP 6: set listing status to ACTIVE
-            activities.setListingStatus(request.productId(), ListingStatus.ACTIVE);
 
             log.info("Product listing created successfully {}", request.productId());
             return new ListingCreationResult(true, "ACTIVE", null);

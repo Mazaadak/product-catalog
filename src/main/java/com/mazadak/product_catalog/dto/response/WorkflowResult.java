@@ -7,7 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class ListingCreationResult {
+public class WorkflowResult {
     private boolean success;
     private String status; // "ACTIVE", "FAILED", "ROLLED_BACK"
     private String errorMessage;

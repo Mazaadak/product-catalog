@@ -16,6 +16,7 @@ import com.mazadak.product_catalog.entities.Product;
 import com.mazadak.product_catalog.entities.enums.IdempotencyStatus;
 import com.mazadak.product_catalog.entities.enums.ProductType;
 import com.mazadak.product_catalog.exception.ResourceNotFoundException;
+import com.mazadak.product_catalog.exception.UnauthorizedException;
 import com.mazadak.product_catalog.mapper.ProductMapper;
 import com.mazadak.product_catalog.repositories.CategoryRepository;
 import com.mazadak.product_catalog.repositories.IdempotencyRecordRepository;
@@ -186,18 +187,21 @@ public class ProductService {
     }
 
     @Transactional
-    public void deleteProduct(UUID productId, UUID currentUserId) {
+    public void deleteProduct(UUID productId) {
         if(productAuctionService.isAuctionActive(productId)) {
             throw new IllegalStateException("Cannot edit product while an auction is active.");
         }
+
         Product productToDelete = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
 
-        if (!productToDelete.getSellerId().equals(currentUserId)) {
-            throw new IllegalStateException("You do not have permission to delete this product.");
-        }
+//        if (!productToDelete.getSellerId().equals(currentUserId)) {
+//            throw new IllegalStateException("You do not have permission to delete this product.");
+//        }
 
         productToDelete.setDeleted(true);
+        productToDelete.setType(ProductType.NONE);
+
         productRepository.save(productToDelete);
         deleteProductOutboxEvent(productToDelete);
     }
@@ -251,7 +255,9 @@ public class ProductService {
     }
 
     public Page<ProductResponseDTO> getProductsByCriteria(ProductFilterDTO filter, Pageable pageable) {
-        Specification<Product> specification = ProductSpecification.fromFilter(filter);
+        Specification<Product> specification = ProductSpecification.fromFilter(filter)
+                .and((root, query, builder) -> builder.isFalse(root.get("isDeleted")));
+
         return productRepository.findAll(specification, pageable)
                 .map(productMapper::toDTO);
     }
@@ -281,6 +287,18 @@ public class ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
         if (product.isDeleted()) {
             throw new ResourceNotFoundException("Product", "id", productId.toString());
+        }
+    }
+
+    public void assertUserOwnsProduct(UUID userId, UUID productId) {
+        var product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
+
+        if (!product.getSellerId().equals(userId)) {
+            throw new UnauthorizedException(
+                    "User does not own this product. Expected sellerId=%s but found %s"
+                            .formatted(product.getSellerId(), userId)
+            );
         }
     }
 }

@@ -5,18 +5,12 @@ import com.mazadak.product_catalog.dto.response.*;
 import com.mazadak.product_catalog.service.ProductService;
 import com.mazadak.product_catalog.util.IdempotencyUtil;
 import com.mazadak.product_catalog.workflow.starter.ListingCreationStarter;
-import io.temporal.api.common.v1.WorkflowExecution;
+import com.mazadak.product_catalog.workflow.starter.ListingDeletionStarter;
 import io.temporal.client.WorkflowClient;
-import io.temporal.client.WorkflowExecutionMetadata;
-import io.temporal.client.WorkflowFailedException;
 import io.temporal.client.WorkflowStub;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +27,7 @@ public class ProductController {
     private final ProductService productService;
     private final ListingCreationStarter listingCreationStarter;
     private final WorkflowClient workflowClient;
+    private final ListingDeletionStarter listingDeletionStarter;
 
     @GetMapping("/{productId}")
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable UUID productId) {
@@ -69,12 +64,12 @@ public class ProductController {
     }
 
     @DeleteMapping("/{productId}")
-    public ResponseEntity<Void> deleteProduct(
+    public ResponseEntity<String> deleteProduct(
             @PathVariable UUID productId,
             @RequestHeader("X-User-Id") UUID currentUserId) {
-
-        productService.deleteProduct(productId, currentUserId);
-        return ResponseEntity.noContent().build();
+        productService.assertUserOwnsProduct(currentUserId, productId);
+        var workflowId = listingDeletionStarter.startListingDeletion(productId);
+        return ResponseEntity.ok(workflowId);
     }
 
     @PostMapping("/batch")
@@ -120,8 +115,8 @@ public class ProductController {
                 case WORKFLOW_EXECUTION_STATUS_COMPLETED:
                     // Get the actual result to determine business success
                     try {
-                        ListingCreationResult result = workflowStub.getResult(
-                                1, TimeUnit.SECONDS, ListingCreationResult.class
+                        WorkflowResult result = workflowStub.getResult(
+                                1, TimeUnit.SECONDS, WorkflowResult.class
                         );
 
                         return ResponseEntity.ok(new ListingStatusResponse(

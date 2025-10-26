@@ -5,7 +5,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.mazadak.product_catalog.workflow.activity.CreateListingActivities;
 import com.mazadak.product_catalog.workflow.activity.impl.CreateListingActivitiesImpl;
+import com.mazadak.product_catalog.workflow.activity.impl.DeleteListingActivitiesImpl;
 import com.mazadak.product_catalog.workflow.impl.ListingCreationWorkflowImpl;
+import com.mazadak.product_catalog.workflow.impl.ListingDeletionWorkflowImpl;
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowClientOptions;
 import io.temporal.common.converter.DefaultDataConverter;
@@ -68,6 +70,24 @@ public class TemporalWorkerConfig {
 
         worker.registerWorkflowImplementationTypes(
                 ListingCreationWorkflowImpl.class
+        );
+
+        worker.registerActivitiesImplementations(
+                activities
+        );
+
+        return worker;
+    }
+
+    @Bean
+    public Worker listingDeletionWorkflow(
+            WorkerFactory workerFactory,
+            DeleteListingActivitiesImpl activities
+    ) {
+        Worker worker = workerFactory.newWorker("LISTING_DELETION_TASK_QUEUE");
+
+        worker.registerWorkflowImplementationTypes(
+                ListingDeletionWorkflowImpl.class
         );
 
         worker.registerActivitiesImplementations(

@@ -1,6 +1,5 @@
 package com.mazadak.product_catalog.workflow;
 
-import com.mazadak.product_catalog.dto.request.CreateListingRequest;
 import com.mazadak.product_catalog.dto.response.WorkflowResult;
 import io.temporal.workflow.WorkflowInterface;
 import io.temporal.workflow.WorkflowMethod;
@@ -8,7 +7,7 @@ import io.temporal.workflow.WorkflowMethod;
 import java.util.UUID;
 
 @WorkflowInterface
-public interface ListingCreationWorkflow {
+public interface ListingDeletionWorkflow {
     @WorkflowMethod
-    WorkflowResult createListing(UUID idempotencyKey, CreateListingRequest request);
+    WorkflowResult deleteListing(UUID productId);
 }

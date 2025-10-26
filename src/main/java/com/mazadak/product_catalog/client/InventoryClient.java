@@ -22,4 +22,7 @@ public interface InventoryClient {
 
     @DeleteMapping("/inventories/{productId}")
     ResponseEntity<Void> deleteInventory(@PathVariable @NotNull UUID productId);
+
+    @PostMapping("/inventories/{productId}")
+    public ResponseEntity<Void> restoreInventory(@PathVariable UUID productId);
 }

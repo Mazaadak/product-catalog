@@ -23,4 +23,10 @@ public interface AuctionClient {
 
     @DeleteMapping("/auctions/{id}")
     ResponseEntity<Void> deleteAuction(@PathVariable UUID id);
+
+    @PostMapping("/auctions/{auctionId}/restore")
+    ResponseEntity<Void> restoreAuction(@PathVariable UUID auctionId);
+
+    @GetMapping("/auctions/products/{productId}")
+    AuctionResponse getByProductId(@PathVariable UUID productId);
 }

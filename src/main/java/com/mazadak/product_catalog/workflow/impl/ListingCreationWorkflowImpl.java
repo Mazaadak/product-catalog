@@ -1,7 +1,7 @@
 package com.mazadak.product_catalog.workflow.impl;
 
 import com.mazadak.product_catalog.dto.request.CreateListingRequest;
-import com.mazadak.product_catalog.dto.response.ListingCreationResult;
+import com.mazadak.product_catalog.dto.response.WorkflowResult;
 import com.mazadak.product_catalog.entities.enums.ProductType;
 import com.mazadak.product_catalog.workflow.ListingCreationWorkflow;
 import com.mazadak.product_catalog.workflow.activity.CreateListingActivities;
@@ -30,7 +30,7 @@ public class ListingCreationWorkflowImpl implements ListingCreationWorkflow {
             );
 
     @Override
-    public ListingCreationResult createListing(UUID idempotencyKey, CreateListingRequest request) {
+    public WorkflowResult createListing(UUID idempotencyKey, CreateListingRequest request) {
         Saga.Options sagaOptions = new Saga.Options.Builder()
                 .setParallelCompensation(false)
                 .build();
@@ -75,11 +75,11 @@ public class ListingCreationWorkflowImpl implements ListingCreationWorkflow {
             log.info("Set product {} listing type to {}", request.productId(), request.type());
 
             log.info("Product listing created successfully {}", request.productId());
-            return new ListingCreationResult(true, "ACTIVE", null);
+            return new WorkflowResult(true, "ACTIVE", null);
         } catch (Exception e) {
             log.error("Product creation failed for product {}, {}", request.productId(), e.getMessage());
             saga.compensate();
-            return new ListingCreationResult(false, "FAILED", e.getMessage());
+            return new WorkflowResult(false, "FAILED", e.getMessage());
         }
     }
 }

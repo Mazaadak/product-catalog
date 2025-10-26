@@ -28,9 +28,8 @@ public class Product extends BaseEntity {
     @Column(length = 100, nullable = false)
     private String title;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    @JsonBackReference
+    @ManyToOne(fetch = FetchType.EAGER)  // ADD THIS
+    @JoinColumn(name = "category_id")
     private Category category;
 
     @Column(columnDefinition = "TEXT")
@@ -44,15 +43,15 @@ public class Product extends BaseEntity {
 
     private boolean isDeleted = false;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductImage> images = new ArrayList<>();;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)  // TODO: CHANGE TO LAZE
+    private List<ProductImage> images = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)  // TODO: CHANGE TO LAZE
     private List<ProductRating> ratings = new ArrayList<>();
 
-    @OneToOne(mappedBy = "product", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "product", fetch = FetchType.EAGER)  // TODO: CHANGE TO LAZE
     private IdempotencyRecord idempotencyRecord;
 
-    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)  // TODO: CHANGE TO LAZE
     private ProductAuction productAuction;
 }

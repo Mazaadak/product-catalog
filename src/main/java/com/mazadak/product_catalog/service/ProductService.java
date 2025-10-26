@@ -301,4 +301,12 @@ public class ProductService {
             );
         }
     }
+
+    public List<ProductResponseDTO> getMyListings(UUID currentUserId, Pageable pageable) {
+        log.info("Fetching listings for current user: {}", currentUserId);
+        return productRepository.findBySellerId(currentUserId, pageable)
+                .stream()
+                .map(productMapper::toDTO)
+                .collect(Collectors.toList());
+    }
 }

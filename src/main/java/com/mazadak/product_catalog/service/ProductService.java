@@ -79,6 +79,8 @@ public class ProductService {
                     .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + createRequest.getCategoryId()));
             productEntity.setCategory(category);
 
+            productEntity.setStatus(ProductStatus.ACTIVE);
+
             Product savedProduct = productRepository.save(productEntity);
             createProductOutboxEvent(savedProduct);
 
@@ -253,5 +255,13 @@ public class ProductService {
         Specification<Product> specification = ProductSpecification.fromFilter(filter);
         return productRepository.findAll(specification, pageable)
                 .map(productMapper::toDTO);
+    }
+
+    public List<ProductResponseDTO> getMyListings(UUID currentUserId, Pageable pageable) {
+        log.info("Fetching listings for current user: {}", currentUserId);
+        return productRepository.findBySellerId(currentUserId, pageable)
+                .stream()
+                .map(productMapper::toDTO)
+                .collect(Collectors.toList());
     }
 }

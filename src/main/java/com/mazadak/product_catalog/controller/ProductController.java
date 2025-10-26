@@ -26,6 +26,13 @@ public class ProductController {
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable UUID productId) {
         return ResponseEntity.ok(productService.getProductById(productId));
     }
+    @GetMapping("/my-listings")
+    public ResponseEntity<List<ProductResponseDTO>> getMyListing(
+            @RequestHeader("X-User-Id") UUID currentUserId,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(productService.getMyListings(currentUserId, pageable));
+    }
+
 
     @GetMapping
     Page<ProductResponseDTO> getProductsByCriteria(

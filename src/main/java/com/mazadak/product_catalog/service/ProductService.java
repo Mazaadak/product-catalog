@@ -14,7 +14,10 @@ import com.mazadak.product_catalog.entities.IdempotencyRecord;
 import com.mazadak.product_catalog.entities.OutboxEvent;
 import com.mazadak.product_catalog.entities.Product;
 import com.mazadak.product_catalog.entities.enums.IdempotencyStatus;
+import com.mazadak.product_catalog.entities.enums.ListingStatus;
 import com.mazadak.product_catalog.entities.enums.ProductStatus;
+import com.mazadak.product_catalog.entities.enums.ProductType;
+import com.mazadak.product_catalog.exception.ResourceNotFoundException;
 import com.mazadak.product_catalog.mapper.ProductMapper;
 import com.mazadak.product_catalog.repositories.CategoryRepository;
 import com.mazadak.product_catalog.repositories.IdempotencyRecordRepository;
@@ -23,13 +26,13 @@ import com.mazadak.product_catalog.repositories.ProductRepository;
 import com.mazadak.product_catalog.repositories.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,7 +55,7 @@ public class ProductService {
 
     public ProductResponseDTO getProductById(UUID productId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
         return productMapper.toDTO(product);
     }
 
@@ -253,5 +256,38 @@ public class ProductService {
         Specification<Product> specification = ProductSpecification.fromFilter(filter);
         return productRepository.findAll(specification, pageable)
                 .map(productMapper::toDTO);
+    }
+
+    public void setProductType(UUID productId, ProductType type) {
+        var product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
+        product.setType(type);
+        productRepository.save(product);
+    }
+
+    public void setProductPrice(UUID productId, BigDecimal price) {
+        var product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
+        product.setPrice(price);
+        productRepository.save(product);
+    }
+
+    public void assertProductExists(UUID productId) {
+        if (!productRepository.existsById(productId)) {
+            throw new ResourceNotFoundException("Product", "id", productId.toString());
+        }
+    }
+
+    public ListingStatus getListingStatus(UUID productId) {
+        var product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
+        return product.getListingStatus();
+    }
+
+    public void setListingStatus(UUID productId, ListingStatus status) {
+        var product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
+        product.setListingStatus(status);
+        productRepository.save(product);
     }
 }

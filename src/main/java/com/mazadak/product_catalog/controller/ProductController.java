@@ -2,25 +2,38 @@ package com.mazadak.product_catalog.controller;
 
 import com.mazadak.product_catalog.dto.request.*;
 import com.mazadak.product_catalog.dto.response.*;
+import com.mazadak.product_catalog.entities.enums.ListingStatus;
 import com.mazadak.product_catalog.service.ProductService;
 import com.mazadak.product_catalog.util.IdempotencyUtil;
+import com.mazadak.product_catalog.workflow.starter.ListingCreationStarter;
+import io.temporal.api.common.v1.WorkflowExecution;
+import io.temporal.client.WorkflowClient;
+import io.temporal.client.WorkflowExecutionMetadata;
+import io.temporal.client.WorkflowFailedException;
+import io.temporal.client.WorkflowStub;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @RestController
 @RequestMapping("/products")
 @AllArgsConstructor
 public class ProductController {
     private final ProductService productService;
+    private final ListingCreationStarter listingCreationStarter;
+    private final WorkflowClient workflowClient;
 
     @GetMapping("/{productId}")
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable UUID productId) {
@@ -73,4 +86,68 @@ public class ProductController {
         return ResponseEntity.ok(productService.getProductsByIds(productIds));
     }
 
+    @PostMapping("/listings")
+    public ResponseEntity<Void> createListing(@RequestHeader("Idempotency-Key") UUID idempotencyKey,
+                                              @RequestHeader("X-User-Id") UUID userId,
+                                              @RequestBody CreateListingRequest request) {
+        if (!request.sellerId().equals(userId)) {
+            // TODO: add forbidden exception
+            return ResponseEntity.status(HttpStatusCode.valueOf(403)).build();
+        }
+
+        listingCreationStarter.startListingCreation(idempotencyKey, request);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/listings/{productId}/status")
+    public ResponseEntity<ListingStatusResponse> getListingCreationStatus(
+            @RequestHeader("Idempotency-Key") UUID idempotencyKey,
+            @RequestHeader("X-User-Id") UUID userId,
+            @PathVariable UUID productId) {
+
+        if (!productService.getProductById(productId).getSellerId().equals(userId)) {
+            return ResponseEntity.status(HttpStatusCode.valueOf(403)).build();
+        }
+
+        String workflowId = "listing-creation-" + productId + "-" + idempotencyKey;
+
+        try {
+            WorkflowStub workflowStub = workflowClient.newUntypedWorkflowStub(workflowId);
+            var description = workflowStub.describe();
+            var workflowStatus = description.getStatus();
+
+            switch (workflowStatus) {
+                case WORKFLOW_EXECUTION_STATUS_COMPLETED:
+                    // Get the actual result to determine business success
+                    try {
+                        ListingCreationResult result = workflowStub.getResult(
+                                1, TimeUnit.SECONDS, ListingCreationResult.class
+                        );
+
+                        return ResponseEntity.ok(new ListingStatusResponse(
+                                result.isSuccess() ? "COMPLETED" : "FAILED",
+                                result.getStatus(),
+                                result.getErrorMessage()
+                        ));
+                    } catch (TimeoutException e) {
+                        // Shouldn't happen since workflow is completed
+                        return ResponseEntity.ok(new ListingStatusResponse("COMPLETED", null, null));
+                    }
+
+                case WORKFLOW_EXECUTION_STATUS_FAILED:
+                case WORKFLOW_EXECUTION_STATUS_TERMINATED:
+                case WORKFLOW_EXECUTION_STATUS_TIMED_OUT:
+                case WORKFLOW_EXECUTION_STATUS_CANCELED:
+                    return ResponseEntity.ok(new ListingStatusResponse("FAILED", null, null));
+
+                case WORKFLOW_EXECUTION_STATUS_RUNNING:
+                case WORKFLOW_EXECUTION_STATUS_CONTINUED_AS_NEW:
+                default:
+                    return ResponseEntity.ok(new ListingStatusResponse("RUNNING", null, null));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

@@ -2,6 +2,7 @@ package com.mazadak.product_catalog.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.mazadak.product_catalog.entities.enums.ListingStatus;
 import com.mazadak.product_catalog.entities.enums.ProductStatus;
 import com.mazadak.product_catalog.entities.enums.ProductType;
 import jakarta.persistence.*;
@@ -42,11 +43,14 @@ public class Product extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private ProductType type;
+    private ProductType type = ProductType.NONE;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
     private ProductStatus status = ProductStatus.INACTIVE; // create drafts by default
+
+    @Enumerated(EnumType.STRING)
+    private ListingStatus listingStatus = ListingStatus.NONE;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images = new ArrayList<>();;

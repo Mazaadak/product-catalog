@@ -1,17 +1,11 @@
 package com.mazadak.product_catalog.dto.event;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-import java.util.UUID;
+import com.mazadak.product_catalog.dto.client.AuctionResponse;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class AuctionEndedEvent {
-    private Long auctionId;
-    private UUID productId;
+import java.util.List;
+
+public record AuctionEndedEvent(AuctionResponse auction,
+                                Object bidders,
+                                Object watchlist) {
 }

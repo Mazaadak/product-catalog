@@ -12,16 +12,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductAuction extends BaseEntity {
-
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+
     private UUID productId;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
-    @JoinColumn(name = "product_id")
-    private Product product;
-
-    private Long auctionId;
+    private UUID auctionId;
 
     private boolean isActive = false;
 }

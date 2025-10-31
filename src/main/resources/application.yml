@@ -26,8 +26,28 @@ spring:
 
   flyway:
     enabled: false
-  kafka:
-    bootstrap-servers: localhost:9092
+
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+      bindings:
+        inventoryDeleted-in-0:
+          destination: inventory-deleted
+          group: product-catalog
+        auctionDeleted-in-0:
+          destination: auction-deleted
+          group: product-catalog
+        auctionStarted-in-0:
+          destination: auction-started
+          group: product-catalog
+        auctionEnded-in-0:
+          destination: auction-ended
+          group: product-catalog
+    function:
+      definition: auctionDeleted;auctionStarted;auctionEnded;inventoryDeleted
+
 
 temporal:
   address: ${TEMPORAL_ADDRESS:127.0.0.1:7233}

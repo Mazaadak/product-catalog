@@ -4,9 +4,11 @@ import com.mazadak.product_catalog.entities.ProductAuction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface ProductAuctionRepository extends JpaRepository<ProductAuction, UUID> {
 
+    Optional<ProductAuction> findByProductIdAndAuctionId(UUID productId, UUID auctionId);
 }

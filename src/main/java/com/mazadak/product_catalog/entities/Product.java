@@ -51,7 +51,4 @@ public class Product extends BaseEntity {
 
     @OneToOne(mappedBy = "product", fetch = FetchType.EAGER)  // TODO: CHANGE TO LAZE
     private IdempotencyRecord idempotencyRecord;
-
-    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)  // TODO: CHANGE TO LAZE
-    private ProductAuction productAuction;
 }

@@ -19,7 +19,7 @@ public class ProductImage extends BaseEntity {
     private Long imageId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @Lob

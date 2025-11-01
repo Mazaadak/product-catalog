@@ -1,5 +1,6 @@
 package com.mazadak.product_catalog.controller;
 
+import com.mazadak.product_catalog.dto.response.WorkflowResult;
 import com.mazadak.product_catalog.dto.request.*;
 import com.mazadak.product_catalog.dto.response.*;
 import com.mazadak.product_catalog.service.ProductService;

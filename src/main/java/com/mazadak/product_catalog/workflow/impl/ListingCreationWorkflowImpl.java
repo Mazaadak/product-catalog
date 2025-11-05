@@ -38,19 +38,23 @@ public class ListingCreationWorkflowImpl implements ListingCreationWorkflow {
         Saga saga = new Saga(sagaOptions);
 
         try {
-            // STEP 1: validate product exists
+            // STEP 1: validat seller has a connected stripe account
+            var stripeAccountId = activities.validateSellerHasConnectedStripeAccount(request.sellerId());
+            log.info("Seller {} has a connected stripe account {}", request.sellerId(), stripeAccountId);
+
+            // STEP 2: validate product exists
             activities.validateProductExists(request.productId());
             log.info("Product {} exists", request.productId());
 
-            // STEP 2: validate product is not deleted
+            // STEP 3: validate product is not deleted
             activities.validateProductIsNotDeleted(request.productId());
             log.info("Product {} is not deleted", request.productId());
 
-            // STEP 3: validate product has not associated listing
+            // STEP 4: validate product has not associated listing
             activities.validateProductHasNoListing(request.productId());
             log.info("Product {} has no associated listings", request.productId());
 
-            // STEP 4: create listing
+            // STEP 5: create listing
             // CASE 1: auction listing
             if (request.type() == ProductType.AUCTION) {
                 var auctionId = activities.createAuction(idempotencyKey, request.sellerId(), request.productId(), request.auction());
@@ -69,7 +73,7 @@ public class ListingCreationWorkflowImpl implements ListingCreationWorkflow {
                 log.info("Set product {} price to {}", request.productId(), request.inventory().price());
             }
 
-            // STEP 5: set product type to listing type
+            // STEP 6: set product type to listing type
             activities.setProductListingType(request.productId(), request.type());
             saga.addCompensation(() -> activities.setProductListingType(request.productId(), ProductType.NONE));
             log.info("Set product {} listing type to {}", request.productId(), request.type());

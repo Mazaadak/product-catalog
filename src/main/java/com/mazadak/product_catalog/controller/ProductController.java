@@ -15,9 +15,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -56,10 +59,24 @@ public class ProductController {
     public ResponseEntity<ProductResponseDTO> createProduct(
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @RequestHeader("X-User-Id") UUID currentUserId,
-            @RequestBody CreateProductRequestDTO createRequest) {
+            @RequestPart CreateProductRequestDTO createRequest,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images
+    ) throws IOException {
+        if (images != null && !images.isEmpty()) {
+            if (images.size() > 10) {
+                throw new IllegalArgumentException("Maximum 10 images allowed for a product");
+            }
+            // TODO should check for content type but let's have fun for now
+        }
 
         String requestHash = IdempotencyUtil.calculateHash(createRequest);
-        ProductResponseDTO createdProduct = productService.createProduct(idempotencyKey, requestHash, createRequest, currentUserId);
+        ProductResponseDTO createdProduct = productService.createProduct(
+                idempotencyKey,
+                requestHash,
+                createRequest,
+                currentUserId,
+                images
+        );
         return ResponseEntity.ok(createdProduct);
     }
 

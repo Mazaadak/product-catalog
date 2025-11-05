@@ -2,6 +2,7 @@ package com.mazadak.product_catalog.workflow.activity.impl;
 
 import com.mazadak.product_catalog.client.AuctionClient;
 import com.mazadak.product_catalog.client.InventoryClient;
+import com.mazadak.product_catalog.client.PaymentClient;
 import com.mazadak.product_catalog.dto.client.AddInventoryRequest;
 import com.mazadak.product_catalog.dto.request.CreateAuctionRequest;
 import com.mazadak.product_catalog.entities.enums.ProductType;
@@ -23,6 +24,7 @@ public class CreateListingActivitiesImpl implements CreateListingActivities {
     private final ProductService productService;
     private final AuctionClient auctionClient;
     private final InventoryClient inventoryClient;
+    private final PaymentClient paymentClient;
 
     @Override
     public void validateProductExists(UUID productId) {
@@ -39,6 +41,11 @@ public class CreateListingActivitiesImpl implements CreateListingActivities {
         Boolean auctionExists = auctionClient.existsByProductId(productId).getBody();
         Boolean inventoryExists = inventoryClient.existsByProductId(productId).getBody();
         if (auctionExists || inventoryExists) throw new ProductListingAlreadyExistsException("productId (has Auction ? " + auctionExists + " has inventory ? " + inventoryExists + ")");
+    }
+
+    @Override
+    public String validateSellerHasConnectedStripeAccount(UUID sellerId) {
+        return paymentClient.getConnectedAccountId(sellerId).getBody(); // will throw an exception if not found
     }
 
     @Override

@@ -12,6 +12,7 @@ public interface CreateListingActivities {
     void validateProductExists(UUID productId);
     void validateProductIsNotDeleted(UUID productId);
     void validateProductHasNoListing(UUID productId);
+    String validateSellerHasConnectedStripeAccount(UUID sellerId);
     void setProductListingType(UUID productId, ProductType type);
     void setProductPrice(UUID productId, BigDecimal price);
     void createInventory(UUID idempotencyKey, UUID productId, int quantity);

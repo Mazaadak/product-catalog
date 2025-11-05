@@ -9,19 +9,13 @@ import com.mazadak.product_catalog.dto.request.CreateProductRequestDTO;
 import com.mazadak.product_catalog.dto.request.ProductFilterDTO;
 import com.mazadak.product_catalog.dto.request.UpdateProductRequestDTO;
 import com.mazadak.product_catalog.dto.response.ProductResponseDTO;
-import com.mazadak.product_catalog.entities.Category;
-import com.mazadak.product_catalog.entities.IdempotencyRecord;
-import com.mazadak.product_catalog.entities.OutboxEvent;
-import com.mazadak.product_catalog.entities.Product;
+import com.mazadak.product_catalog.entities.*;
 import com.mazadak.product_catalog.entities.enums.IdempotencyStatus;
 import com.mazadak.product_catalog.entities.enums.ProductType;
 import com.mazadak.product_catalog.exception.ResourceNotFoundException;
 import com.mazadak.product_catalog.exception.UnauthorizedException;
 import com.mazadak.product_catalog.mapper.ProductMapper;
-import com.mazadak.product_catalog.repositories.CategoryRepository;
-import com.mazadak.product_catalog.repositories.IdempotencyRecordRepository;
-import com.mazadak.product_catalog.repositories.OutboxEventRepository;
-import com.mazadak.product_catalog.repositories.ProductRepository;
+import com.mazadak.product_catalog.repositories.*;
 import com.mazadak.product_catalog.repositories.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +24,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -46,6 +42,8 @@ public class ProductService {
     private final ProductAuctionService productAuctionService;
     private final OutboxEventRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final ProductImageRepository productImageRepository;
+    private final ImageUploadService imageUploadService;
 
     public Page<ProductResponseDTO> getAllProducts(Pageable pageable) {
         Page<Product> products = productRepository.findAll(pageable);
@@ -59,7 +57,13 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductResponseDTO createProduct(String idempotencyKey, String requestHash, CreateProductRequestDTO createRequest, UUID currentUserId) {
+    public ProductResponseDTO createProduct(
+            String idempotencyKey,
+            String requestHash,
+            CreateProductRequestDTO createRequest,
+            UUID currentUserId,
+            List<MultipartFile> images
+    ) throws IOException {
         Optional<ProductResponseDTO> existingResponse = handleIdempotencyCheck(idempotencyKey, requestHash);
         if (existingResponse.isPresent()) {
             return existingResponse.get();
@@ -88,12 +92,31 @@ public class ProductService {
             newRecord.setStatus(IdempotencyStatus.COMPLETED);
             idempotencyRecordRepository.save(newRecord);
 
+            if (images != null) uploadImages(productEntity, images);
+
             return productMapper.toDTO(savedProduct);
 
         } catch (Exception e) {
             newRecord.setStatus(IdempotencyStatus.FAILED);
             idempotencyRecordRepository.save(newRecord);
             throw e;
+        }
+    }
+
+    private void uploadImages(Product product, List<MultipartFile> images) throws IOException {
+        List<ProductImage> productImages = new ArrayList<>();
+
+        for (int i = 0; i < images.size(); i++) {
+            var file = images.get(i);
+            String imageUrl = imageUploadService.uploadFile(file);
+
+            ProductImage productImage = new ProductImage();
+            productImage.setProduct(product);
+            productImage.setImageUri(imageUrl);
+            productImage.setIsPrimary(i == 0);
+            productImages.add(productImage);
+
+            productImageRepository.save(productImage);
         }
     }
 

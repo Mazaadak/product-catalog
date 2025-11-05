@@ -17,5 +17,4 @@ public class CreateProductRequestDTO {
     private BigDecimal price;
     private ProductType type;
     private Long categoryId;
-    private List<String> imageUrls;
 }

@@ -1,4 +1,7 @@
 package com.mazadak.product_catalog.dto.request;
 
-public class UpdateRatingRequestDTO {
-}
+
+public record UpdateRatingRequestDTO(
+    Integer rating,
+    String reviewText
+) {}

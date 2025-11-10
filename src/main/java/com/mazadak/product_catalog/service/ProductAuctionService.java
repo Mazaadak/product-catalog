@@ -1,8 +1,8 @@
 package com.mazadak.product_catalog.service;
 
+import com.mazadak.common.exception.shared.ResourceNotFoundException;
 import com.mazadak.product_catalog.entities.Product;
 import com.mazadak.product_catalog.entities.ProductAuction;
-import com.mazadak.product_catalog.exception.ResourceNotFoundException;
 import com.mazadak.product_catalog.repositories.ProductAuctionRepository;
 import com.mazadak.product_catalog.repositories.ProductRepository;
 import lombok.RequiredArgsConstructor;

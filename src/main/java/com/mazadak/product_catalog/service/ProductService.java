@@ -2,6 +2,8 @@ package com.mazadak.product_catalog.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mazadak.common.exception.shared.ResourceNotFoundException;
+import com.mazadak.common.exception.shared.UnauthorizedException;
 import com.mazadak.product_catalog.dto.event.ProductCreatedEvent;
 import com.mazadak.product_catalog.dto.event.ProductDeletedEvent;
 import com.mazadak.product_catalog.dto.event.ProductUpdatedEvent;
@@ -12,8 +14,6 @@ import com.mazadak.product_catalog.dto.response.ProductResponseDTO;
 import com.mazadak.product_catalog.entities.*;
 import com.mazadak.product_catalog.entities.enums.IdempotencyStatus;
 import com.mazadak.product_catalog.entities.enums.ProductType;
-import com.mazadak.product_catalog.exception.ResourceNotFoundException;
-import com.mazadak.product_catalog.exception.UnauthorizedException;
 import com.mazadak.product_catalog.mapper.ProductMapper;
 import com.mazadak.product_catalog.repositories.*;
 import com.mazadak.product_catalog.repositories.specification.ProductSpecification;

@@ -1,12 +1,12 @@
 package com.mazadak.product_catalog.workflow.activity.impl;
 
+import com.mazadak.common.exception.domain.product.ProductListingAlreadyExistsException;
 import com.mazadak.product_catalog.client.AuctionClient;
 import com.mazadak.product_catalog.client.InventoryClient;
 import com.mazadak.product_catalog.client.PaymentClient;
 import com.mazadak.product_catalog.dto.client.AddInventoryRequest;
 import com.mazadak.product_catalog.dto.request.CreateAuctionRequest;
 import com.mazadak.product_catalog.entities.enums.ProductType;
-import com.mazadak.product_catalog.exception.ProductListingAlreadyExistsException;
 import com.mazadak.product_catalog.service.ProductService;
 import com.mazadak.product_catalog.workflow.activity.CreateListingActivities;
 import lombok.RequiredArgsConstructor;

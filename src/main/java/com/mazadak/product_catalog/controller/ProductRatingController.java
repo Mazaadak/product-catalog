@@ -76,6 +76,9 @@ public class ProductRatingController {
     @GetMapping("/ratings/{ratingId}")
     public ResponseEntity<RatingResponseDTO> getRatingById(@PathVariable Long ratingId) {
         RatingResponseDTO rating = productRatingService.getProductRatingById(ratingId);
+        if (rating == null) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok(rating);
     }
 

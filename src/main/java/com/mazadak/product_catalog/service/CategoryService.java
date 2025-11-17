@@ -1,5 +1,6 @@
 package com.mazadak.product_catalog.service;
 
+import com.mazadak.common.exception.shared.ResourceNotFoundException;
 import com.mazadak.product_catalog.dto.request.CreateCategoryRequestDTO;
 import com.mazadak.product_catalog.dto.response.CategoryDTO;
 import com.mazadak.product_catalog.entities.Category;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,14 +30,14 @@ public class CategoryService {
 
     public CategoryDTO getCategoryById(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
         return categoryMapper.toDTO(category);
     }
 
     @Transactional
     public CategoryDTO updateCategory(Long id, CreateCategoryRequestDTO updateRequest) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         category.setName(updateRequest.getName());
         Category updatedCategory = categoryRepository.save(category);
@@ -47,7 +47,7 @@ public class CategoryService {
     @Transactional
     public void deleteCategory(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         categoryRepository.delete(category);
     }

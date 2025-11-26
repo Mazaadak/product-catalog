@@ -1,14 +1,13 @@
 package com.mazadak.product_catalog.service;
 
+import com.mazadak.common.exception.shared.ResourceNotFoundException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mazadak.product_catalog.dto.entity.ProductRatingDTO;
 import com.mazadak.product_catalog.dto.event.RatingCreatedEvent;
 import com.mazadak.product_catalog.dto.event.RatingDeletedEvent;
 import com.mazadak.product_catalog.dto.event.RatingUpdatedEvent;
 import com.mazadak.product_catalog.dto.request.CreateRatingRequestDTO;
 import com.mazadak.product_catalog.dto.request.UpdateRatingRequestDTO;
-import com.mazadak.product_catalog.dto.response.ProductResponseDTO;
 import com.mazadak.product_catalog.dto.response.RatingResponseDTO;
 import com.mazadak.product_catalog.entities.*;
 import com.mazadak.product_catalog.entities.enums.IdempotencyStatus;
@@ -42,8 +41,11 @@ public class ProductRatingService {
     }
 
     public RatingResponseDTO getProductRatingById(Long ratingId) {
-        return productRatingMapper.toDTO(productRatingRepository.findById(ratingId).orElse(null));
+        var rating = productRatingRepository.findById(ratingId).orElse(null);
+        if (rating == null) return null;
+        return productRatingMapper.toDTO(rating);
     }
+
 
     @Transactional
     public RatingResponseDTO createProductRating(
@@ -67,39 +69,37 @@ public class ProductRatingService {
 
         ProductRating savedRating = null;
 
-        try {
-            Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new RuntimeException("Product not found with ID: " + productId));
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
 
-            if (product.getSellerId().equals(currentUserId)) {
-                throw new IllegalStateException("You cannot rate your own product.");
-            }
-
-            if (productRatingRepository.existsByProduct_ProductIdAndUserId(productId, currentUserId)) {
-                throw new IllegalStateException("You have already submitted a rating for this product.");
-            }
-
-            ProductRating newRating = productRatingMapper.toEntity(createRequest);
-            newRating.setProduct(product);
-            newRating.setUserId(currentUserId);
-            savedRating = productRatingRepository.save(newRating);
-
-            createRatingOutboxEvent(savedRating);
-
-            newRecord.setRating(savedRating);
-            newRecord.setStatus(IdempotencyStatus.COMPLETED);
-            ratingIdempotencyRecordRepository.save(newRecord);
-
-            return productRatingMapper.toDTO(savedRating);
-
-        } catch (Exception e) {
-            if (savedRating == null) {
-                newRecord.setStatus(IdempotencyStatus.FAILED);
-                ratingIdempotencyRecordRepository.save(newRecord);
-            }
-            throw new RuntimeException(e);
+        if (product.getSellerId().equals(currentUserId)) {
+            throw new IllegalStateException("You cannot rate your own product.");
         }
+
+        if (productRatingRepository.existsByProduct_ProductIdAndUserId(productId, currentUserId)) {
+            throw new IllegalStateException("You have already submitted a rating for this product.");
+        }
+
+        ProductRating newRating = productRatingMapper.toEntity(createRequest);
+        newRating.setProduct(product);
+        newRating.setUserId(currentUserId);
+        savedRating = productRatingRepository.save(newRating);
+
+        try {
+            createRatingOutboxEvent(savedRating);
+        } catch (Exception e) {
+            newRecord.setStatus(IdempotencyStatus.FAILED);
+            ratingIdempotencyRecordRepository.save(newRecord);
+            throw new RuntimeException("Failed to create rating event", e);
+        }
+
+        newRecord.setRating(savedRating);
+        newRecord.setStatus(IdempotencyStatus.COMPLETED);
+        ratingIdempotencyRecordRepository.save(newRecord);
+
+        return productRatingMapper.toDTO(savedRating);
     }
+
 
 
     private Optional<RatingResponseDTO> handleIdempotencyCheck(String idempotencyKey, String requestHash) {
@@ -108,12 +108,12 @@ public class ProductRatingService {
             RatingIdempotencyRecord existing = existingRecordOpt.get();
             if (existing.getStatus() == IdempotencyStatus.COMPLETED) {
                 if (!existing.getRequestHash().equals(requestHash)) {
-                    throw new RuntimeException("Idempotency key reused with a different request payload.");
+                    throw new IllegalStateException("Idempotency key reused with a different request payload.");
                 }
                 return Optional.of(productRatingMapper.toDTO(existing.getRating()));
             }
             if (existing.getStatus() == IdempotencyStatus.IN_PROGRESS) {
-                throw new RuntimeException("Request with this key is currently in progress. Please retry later.");
+                throw new IllegalStateException("Request with this key is currently in progress. Please retry later.");
             }
         }
         return Optional.empty();
@@ -138,7 +138,7 @@ public class ProductRatingService {
 
             outboxRepository.save(outboxEvent);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error creating outbox event for rating creation", e);
+            throw new RuntimeException("Failed to create rating event", e);
         }
     }
 
@@ -146,7 +146,7 @@ public class ProductRatingService {
     @Transactional
     public RatingResponseDTO updateProductRating(Long ratingId, UUID currentUserId, UpdateRatingRequestDTO updateRequest) {
         ProductRating existingRating = productRatingRepository.findById(ratingId)
-                .orElseThrow(() -> new RuntimeException("Rating not found with ID: " + ratingId));
+                .orElseThrow(() -> new ResourceNotFoundException("Rating not found with ID: " + ratingId));
 
         if (!existingRating.getUserId().equals(currentUserId)) {
             throw new IllegalStateException("You do not have permission to update this rating.");
@@ -180,13 +180,13 @@ public class ProductRatingService {
 
             outboxRepository.save(outboxEvent);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error creating outbox event for rating update", e);
+            throw new RuntimeException("Failed to create rating update event", e);
         }
     }
     @Transactional
     public void deleteProductRating(Long ratingId, UUID currentUserId) {
         ProductRating rating = productRatingRepository.findById(ratingId)
-                .orElseThrow(() -> new RuntimeException("Rating not found with ID: " + ratingId));
+                .orElseThrow(() -> new ResourceNotFoundException("Rating not found with ID: " + ratingId));
         if (!rating.getUserId().equals(currentUserId)) {
             throw new IllegalStateException("You do not have permission to delete this rating.");
         }
@@ -211,7 +211,7 @@ public class ProductRatingService {
 
             outboxRepository.save(outboxEvent);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error creating outbox event for rating deletion", e);
+            throw new RuntimeException("Failed to create rating delete event", e);
         }
     }
     public Page<RatingResponseDTO> getRatingsByProductId(UUID productId, Pageable pageable) {
